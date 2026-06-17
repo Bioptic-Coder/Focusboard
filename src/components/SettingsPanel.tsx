@@ -8,6 +8,9 @@ export interface AppSettings {
   focusStyle: "solid" | "dashed" | "dotted" | "double";
   focusColor: string; // hex
   einkMode: boolean;
+  timeCueInterval: 0 | 15 | 30 | 60; // minutes (0 is disabled)
+  timeCueVisual: boolean;
+  timeCueAudio: boolean;
 }
 
 interface SettingsPanelProps {
@@ -263,6 +266,116 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
             Disables all smooth layout transitions, visual animations, separator blinking, and color glows to prevent screen ghosting and excessive refresh cycles on Kindle, Kobo, or Onyx tablets.
           </p>
+        </div>
+
+        {/* Periodic Time Announcements */}
+        <div className="space-y-4 border-t border-[var(--color-card-border)] pt-6">
+          <span className="block text-lg font-bold text-[var(--color-text-main)]">
+            Periodic Time Announcements
+          </span>
+          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+            Get automated visual or audio alerts at regular intervals to keep track of time.
+          </p>
+
+          {/* Interval selection */}
+          <div className="space-y-2">
+            <span className="block text-sm font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+              Cue Interval
+            </span>
+            <div className="grid grid-cols-4 gap-1.5">
+              {[
+                { value: 0, label: "Off" },
+                { value: 15, label: "15m" },
+                { value: 30, label: "30m" },
+                { value: 60, label: "1h" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    updateSetting("timeCueInterval", opt.value as AppSettings["timeCueInterval"]);
+                    announce(`Time cues set to ${opt.value === 0 ? "disabled" : `every ${opt.value} minutes`}`);
+                  }}
+                  className={`py-2 px-1 rounded-lg text-center font-bold text-sm border transition-all accessible-focus ${
+                    settings.timeCueInterval === opt.value
+                      ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                      : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Cue Types */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                const nextVal = !settings.timeCueVisual;
+                updateSetting("timeCueVisual", nextVal);
+                announce(`Visual flash cues ${nextVal ? "enabled" : "disabled"}`);
+              }}
+              className={`py-3 px-4 rounded-xl text-left font-bold text-sm border transition-all accessible-focus flex justify-between items-center ${
+                settings.timeCueVisual
+                  ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                  : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+              }`}
+            >
+              <span>Visual Flash</span>
+              <span className="text-xs font-extrabold px-1.5 py-0.5 rounded bg-black/20 border border-[var(--color-card-border)]">
+                {settings.timeCueVisual ? "ON" : "OFF"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const nextVal = !settings.timeCueAudio;
+                updateSetting("timeCueAudio", nextVal);
+                announce(`Audio chime cues ${nextVal ? "enabled" : "disabled"}`);
+                if (nextVal) {
+                  // Play a quick test sound so they can hear it
+                  try {
+                    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+                    const ctx = new AudioCtxClass();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.01, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+                    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.3, ctx.currentTime + 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.5);
+                    setTimeout(() => {
+                      try {
+                        ctx.close();
+                      } catch (_) {}
+                    }, 600);
+                  } catch (e) {
+                    console.warn("AudioContext blocked or not supported:", e);
+                  }
+                }
+              }}
+              className={`py-3 px-4 rounded-xl text-left font-bold text-sm border transition-all accessible-focus flex justify-between items-center ${
+                settings.timeCueAudio
+                  ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                  : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+              }`}
+            >
+              <span>Audio Beep</span>
+              <span className="text-xs font-extrabold px-1.5 py-0.5 rounded bg-black/20 border border-[var(--color-card-border)]">
+                {settings.timeCueAudio ? "ON" : "OFF"}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Focus Outline Color */}

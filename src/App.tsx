@@ -17,6 +17,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   focusStyle: "dashed",
   focusColor: "#f59e0b", // Amber alert
   einkMode: isEinkDetected(),
+  timeCueInterval: 0,
+  timeCueVisual: true,
+  timeCueAudio: true,
 };
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
@@ -37,6 +40,9 @@ function App() {
           ...DEFAULT_SETTINGS,
           ...parsed,
           einkMode: parsed.einkMode !== undefined ? parsed.einkMode : DEFAULT_SETTINGS.einkMode,
+          timeCueInterval: parsed.timeCueInterval !== undefined ? parsed.timeCueInterval : DEFAULT_SETTINGS.timeCueInterval,
+          timeCueVisual: parsed.timeCueVisual !== undefined ? parsed.timeCueVisual : DEFAULT_SETTINGS.timeCueVisual,
+          timeCueAudio: parsed.timeCueAudio !== undefined ? parsed.timeCueAudio : DEFAULT_SETTINGS.timeCueAudio,
         };
       } catch (_) {}
     }
@@ -56,9 +62,95 @@ function App() {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [announcement, setAnnouncement] = useState<string>("");
+  const [cueTime, setCueTime] = useState<Date | null>(null);
 
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const wasSettingsOpen = useRef(false);
+  const lastTriggeredMinRef = useRef<number>(-1);
+
+  const playCueBeep = () => {
+    try {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtxClass();
+      
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = "sine";
+      
+      // High pitch double-chime
+      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+      gain.gain.setValueAtTime(0.01, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+
+      osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.2); // C#6
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+
+      setTimeout(() => {
+        try {
+          ctx.close();
+        } catch (_) {}
+      }, 600);
+    } catch (e) {
+      console.warn("AudioContext blocked or not supported:", e);
+    }
+  };
+
+  const triggerTimeCue = (time: Date) => {
+    if (settings.timeCueAudio) {
+      playCueBeep();
+    }
+    if (settings.timeCueVisual) {
+      setCueTime(time);
+      // Auto-dismiss visual overlay after 5 seconds
+      setTimeout(() => {
+        setCueTime(null);
+      }, 5000);
+    }
+    // Also send an accessible announcement
+    const hours = time.getHours();
+    const minutes = time.getMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const formattedHours = hours % 12 || 12;
+    announce(`Periodic Cue: Current time is ${formattedHours}:${String(minutes).padStart(2, "0")} ${ampm}`);
+  };
+
+  // Monitor intervals for periodic time cues
+  useEffect(() => {
+    if (settings.timeCueInterval === 0) return;
+
+    const checkInterval = setInterval(() => {
+      const now = new Date();
+      const m = now.getMinutes();
+
+      if (m % settings.timeCueInterval === 0 && m !== lastTriggeredMinRef.current) {
+        lastTriggeredMinRef.current = m;
+        triggerTimeCue(now);
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(checkInterval);
+  }, [settings.timeCueInterval, settings.timeCueVisual, settings.timeCueAudio]);
+
+  // Keypress dismiss listener for visual time cue overlay
+  useEffect(() => {
+    if (!cueTime) return;
+
+    const handleDismiss = () => {
+      setCueTime(null);
+    };
+
+    window.addEventListener("keydown", handleDismiss);
+    return () => window.removeEventListener("keydown", handleDismiss);
+  }, [cueTime]);
 
   // Return focus to settings button on close
   useEffect(() => {
@@ -207,6 +299,35 @@ function App() {
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-in fade-in duration-200"
           aria-hidden="true"
         />
+      )}
+
+      {/* Fullscreen Time Cue Visual Flash Overlay */}
+      {cueTime && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          onClick={() => setCueTime(null)}
+          className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center text-center cursor-pointer animate-in fade-in duration-300"
+        >
+          <span className="text-xs uppercase font-extrabold tracking-widest text-zinc-500 mb-2">
+            Time Announcement Cue
+          </span>
+          <time
+            dateTime={cueTime.toISOString()}
+            className="text-8xl md:text-9xl font-black text-white tracking-tight tabular-nums select-none"
+          >
+            {(() => {
+              const hours = cueTime.getHours();
+              const minutes = cueTime.getMinutes();
+              const ampm = hours >= 12 ? "PM" : "AM";
+              const formattedHours = hours % 12 || 12;
+              return `${formattedHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+            })()}
+          </time>
+          <span className="text-sm font-bold text-zinc-400 mt-6 animate-pulse">
+            Tap anywhere or press any key to dismiss
+          </span>
+        </div>
       )}
     </div>
   );

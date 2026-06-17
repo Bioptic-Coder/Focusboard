@@ -9,6 +9,9 @@ const mockSettings: AppSettings = {
   focusStyle: "dashed",
   focusColor: "#f59e0b",
   einkMode: false,
+  timeCueInterval: 0,
+  timeCueVisual: true,
+  timeCueAudio: true,
 };
 
 describe("SettingsPanel Integration", () => {
