@@ -1,0 +1,9 @@
+services:
+  focusboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: focusboard
+    ports:
+      - "8080:80"
+    restart: unless-stopped

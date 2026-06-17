@@ -19,6 +19,10 @@ This file serves as a persistent context guide and instruction set for **Antigra
 - **Run Tests (Vitest):** `npx vitest run` (or `npx vitest` for watch mode)
 - **Test Setup File:** [src/test/setup.ts](file:///Users/ericglasser/projects/Focusboard/src/test/setup.ts) (handles mocks for Web Audio API and `localStorage`).
 
+### Docker & Portability
+- **Build & Start Container:** `docker compose up --build -d` (serves Focusboard locally at `http://localhost:8080`)
+- **Stop Container:** `docker compose down`
+
 ---
 
 ## 🛠️ Technology Stack
