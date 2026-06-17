@@ -16,6 +16,10 @@ RUN npm run build
 # Stage 2: Serve the production build with Nginx
 FROM nginx:alpine
 
+# Link back to the GitHub repository
+LABEL org.opencontainers.image.source="https://github.com/Bioptic-Coder/Focusboard"
+LABEL org.opencontainers.image.description="Focusboard - high contrast dashboard for study and wellness"
+
 # Copy built files to Nginx html directory
 COPY --from=build /app/dist /usr/share/nginx/html
 
