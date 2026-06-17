@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { LayoutGrid, Clock, Calendar, Hourglass, Timer as TimerIcon, FileText } from "lucide-react";
+import { LayoutGrid, Clock, Calendar, Hourglass, Timer as TimerIcon, FileText, Quote, Cloud, Calculator, Flame } from "lucide-react";
 import { WidgetWrapper } from "./WidgetWrapper";
 
 // Widgets import placeholders
@@ -8,10 +8,14 @@ import { DateWidget } from "./widgets/DateWidget";
 import { TimerWidget } from "./widgets/TimerWidget";
 import { StopwatchWidget } from "./widgets/StopwatchWidget";
 import { QuickNotesWidget } from "./widgets/QuickNotesWidget";
+import { QuoteWidget } from "./widgets/QuoteWidget";
+import { WeatherWidget } from "./widgets/WeatherWidget";
+import { CalculatorWidget } from "./widgets/CalculatorWidget";
+import { PomodoroWidget } from "./widgets/PomodoroWidget";
 
 export interface WidgetConfig {
   id: string;
-  type: "clock" | "date" | "timer" | "stopwatch" | "quicknotes";
+  type: "clock" | "date" | "timer" | "stopwatch" | "quicknotes" | "quote" | "weather" | "calculator" | "pomodoro";
   x: number; // 0-11
   y: number; // 0+
   w: number; // 1-12
@@ -68,6 +72,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     if (type === "clock") { w = 6; h = 2; }
     if (type === "quicknotes") { w = 6; h = 3; }
     if (type === "date") { w = 4; h = 2; }
+    if (type === "quote") { w = 6; h = 2; }
+    if (type === "weather") { w = 4; h = 2; }
+    if (type === "calculator") { w = 4; h = 3; }
+    if (type === "pomodoro") { w = 4; h = 2; }
 
     const newWidget: WidgetConfig = {
       id: `${type}-${Date.now()}`,
@@ -200,6 +208,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
         return <StopwatchWidget />;
       case "quicknotes":
         return <QuickNotesWidget />;
+      case "quote":
+        return <QuoteWidget />;
+      case "weather":
+        return <WeatherWidget />;
+      case "calculator":
+        return <CalculatorWidget />;
+      case "pomodoro":
+        return <PomodoroWidget />;
       default:
         return <div>Unknown Widget</div>;
     }
@@ -223,36 +239,60 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
             <LayoutGrid className="w-5 h-5 text-amber-500" />
             <span className="font-bold text-amber-500">Edit Mode: Add Widgets</span>
           </div>
-          <div className="flex space-x-2 overflow-x-auto">
+          <div className="flex space-x-2 overflow-x-auto max-w-full pb-1">
             <button
               onClick={() => addWidget("clock")}
-              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus"
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
             >
               <Clock className="w-4 h-4 mr-1.5 text-blue-400" /> + Clock
             </button>
             <button
               onClick={() => addWidget("date")}
-              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus"
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
             >
               <Calendar className="w-4 h-4 mr-1.5 text-green-400" /> + Date
             </button>
             <button
               onClick={() => addWidget("timer")}
-              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus"
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
             >
               <Hourglass className="w-4 h-4 mr-1.5 text-yellow-400" /> + Timer
             </button>
             <button
               onClick={() => addWidget("stopwatch")}
-              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus"
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
             >
-              <TimerIcon className="w-4 h-4 mr-1.5 text-red-400" /> + Stopwatch
+              <TimerIcon className="w-4 h-4 mr-1.5 text-rose-400" /> + Stopwatch
             </button>
             <button
               onClick={() => addWidget("quicknotes")}
-              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus"
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
             >
               <FileText className="w-4 h-4 mr-1.5 text-purple-400" /> + Notes
+            </button>
+            <button
+              onClick={() => addWidget("quote")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Quote className="w-4 h-4 mr-1.5 text-orange-400" /> + Quote
+            </button>
+            <button
+              onClick={() => addWidget("weather")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Cloud className="w-4 h-4 mr-1.5 text-sky-400" /> + Weather
+            </button>
+            <button
+              onClick={() => addWidget("calculator")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Calculator className="w-4 h-4 mr-1.5 text-zinc-400" /> + Calc
+            </button>
+            <button
+              onClick={() => addWidget("pomodoro")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Flame className="w-4 h-4 mr-1.5 text-red-500" /> + Pomodoro
             </button>
           </div>
         </div>
