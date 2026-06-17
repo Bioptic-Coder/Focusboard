@@ -105,7 +105,7 @@ export const CalculatorWidget: React.FC = () => {
         ) : (
           <div className="text-sm text-transparent select-none font-mono">None</div>
         )}
-        <div className="text-3xl font-extrabold text-[var(--color-text-main)] tabular-nums truncate font-mono">
+        <div data-testid="calc-display" className="text-3xl font-extrabold text-[var(--color-text-main)] tabular-nums truncate font-mono">
           {display}
         </div>
       </div>
