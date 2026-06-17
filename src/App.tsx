@@ -99,10 +99,10 @@ function App() {
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-extrabold tracking-tight leading-none text-[var(--color-text-main)]">
-              DeskDash
+              Focusboard
             </h1>
             <p className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] tracking-widest mt-0.5">
-              iPad Utility Dashboard
+              Accessible Desk Dashboard
             </p>
           </div>
         </div>
