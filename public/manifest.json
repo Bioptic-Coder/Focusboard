@@ -1,0 +1,22 @@
+{
+  "short_name": "DeskDash",
+  "name": "iPad Desk Utility Dashboard",
+  "description": "An accessible, high-contrast desk utility clock, timer, and stopwatch dashboard designed for iPad.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "display": "standalone",
+  "orientation": "any"
+}
