@@ -47,6 +47,14 @@ This file serves as a persistent context guide and instruction set for **Antigra
 - **Touch/Screen controls:** To avoid dragging precision issues on iPad, widgets should provide simple button controls (Up/Down/Left/Right shifts, Grow/Shrink sizes) visible during Edit Mode.
 - **Screen Reader Ready:** Use semantic HTML (`<button>`, `<main>`, `<header>`) and appropriate `aria-label` tags for visual-only controls (e.g., icons with no visible text).
 
+### E-ink Mode Optimization
+- **Auto-Detection & Toggle:** E-ink screens (like Kindle, Kobo, or Onyx tablets) are auto-detected by matching `/Kindle|Silk|Kobo|Onyx|E-ink|Paperwhite|e-reader/i` against the User Agent, defaulting to the High Contrast Light theme. Users can manually override this toggle in the Accessibility Settings panel.
+- **Global CSS Overrides:** When `einkMode` is enabled, `data-eink="true"` is set on the document element. A global CSS rule in [src/index.css](file:///Users/ericglasser/projects/Focusboard/src/index.css) matches `[data-eink="true"]` and disables all smooth transitions, animations, box-shadows, and backdrop-blurs.
+- **Component Specific Actions:**
+  - **ClockWidget:** Disable clock separator colon blinking (keeps it solid) and cap the time ticking interval to `1000ms` (avoiding 100ms ticks).
+  - **MetronomeWidget:** Force active visual beat indicators to be solid `var(--color-text-main)` and inactive indicators to be transparent (removing gray gradients and scaling).
+  - **BreathingWidget:** Remove circle scale transitions (uses static sizes and text instructions only).
+
 ### Audio and Offline Capability
 - Focusboard operates completely offline. Do **not** load external scripts, media, fonts, or assets dynamically from the web.
 - Audio warnings (e.g., in `TimerWidget`, `PomodoroWidget`, or alerts) must be synthesized offline using the browser's **Web Audio API**.
