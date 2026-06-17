@@ -29,7 +29,11 @@ const EQUAL_BREATHING: BreathStep[] = [
 
 type PatternType = "box" | "calm" | "equal";
 
-export const BreathingWidget: React.FC = () => {
+interface BreathingWidgetProps {
+  einkMode?: boolean;
+}
+
+export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode }) => {
   const [patternType, setPatternType] = useState<PatternType>("box");
   const [isActive, setIsActive] = useState<boolean>(false);
   const [stepIndex, setStepIndex] = useState<number>(0);
@@ -166,16 +170,18 @@ export const BreathingWidget: React.FC = () => {
       <div className="relative w-32 h-32 flex items-center justify-center mb-3">
         {/* Animated scaling bubble */}
         <div
-          className={`w-16 h-16 rounded-full border border-white/10 transition-transform duration-1000 ease-out flex items-center justify-center shadow-lg ${
-            isActive ? currentStep.color : "bg-zinc-600 shadow-zinc-600/30"
+          className={`w-16 h-16 rounded-full border border-white/10 flex items-center justify-center ${
+            einkMode 
+              ? "border-4 border-[var(--color-text-main)] bg-transparent" 
+              : `transition-transform duration-1000 ease-out shadow-lg ${isActive ? currentStep.color : "bg-zinc-600 shadow-zinc-600/30"}`
           }`}
-          style={{
+          style={einkMode ? undefined : {
             transform: `scale(${isActive ? currentStep.scale : 1.0})`,
             transitionDuration: `${isActive ? currentStep.duration * 1000 : 1000}ms`,
           }}
         >
           {/* Internal text inside the bubble */}
-          <span className="text-white text-xs font-black uppercase tracking-wider scale-90 text-center px-1">
+          <span className={`${einkMode ? "text-[var(--color-text-main)] font-black" : "text-white font-black"} text-xs uppercase tracking-wider scale-90 text-center px-1`}>
             {isActive ? currentStep.label.split(" ").pop() : "IDLE"}
           </span>
         </div>
@@ -183,7 +189,7 @@ export const BreathingWidget: React.FC = () => {
         {/* Floating timer overlay */}
         {isActive && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-white drop-shadow font-mono text-3xl font-black tabular-nums">
+            <div className={`${einkMode ? "text-[var(--color-text-main)]" : "text-white drop-shadow"} font-mono text-3xl font-black tabular-nums`}>
               {timeLeft}
             </div>
           </div>

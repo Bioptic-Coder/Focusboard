@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, Plus, Minus } from "lucide-react";
 
-export const MetronomeWidget: React.FC = () => {
+interface MetronomeWidgetProps {
+  einkMode?: boolean;
+}
+
+export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode }) => {
   const [bpm, setBpm] = useState<number>(120);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentBeat, setCurrentBeat] = useState<number>(1);
@@ -113,12 +117,16 @@ export const MetronomeWidget: React.FC = () => {
             <div
               key={b}
               aria-label={`Beat ${b} indicator`}
-              className={`w-6 h-6 rounded-full border border-[var(--color-card-border)] transition-all duration-75 ${
+              className={`w-6 h-6 rounded-full border border-[var(--color-text-main)] ${
                 isActive
-                  ? b === 1
-                    ? "bg-red-500 scale-125 shadow-lg shadow-red-500/50"
-                    : "bg-blue-500 scale-115 shadow-lg shadow-blue-500/50"
-                  : "bg-black/30"
+                  ? einkMode
+                    ? "bg-[var(--color-text-main)]"
+                    : b === 1
+                      ? "bg-red-500 scale-125 shadow-lg shadow-red-500/50 transition-all duration-75"
+                      : "bg-blue-500 scale-115 shadow-lg shadow-blue-500/50 transition-all duration-75"
+                  : einkMode
+                    ? "bg-transparent"
+                    : "bg-black/30 transition-all duration-75"
               }`}
             />
           );

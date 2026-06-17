@@ -31,9 +31,10 @@ interface DashboardProps {
   widgets: WidgetConfig[];
   setWidgets: (widgets: WidgetConfig[]) => void;
   editMode: boolean;
+  einkMode: boolean;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editMode }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editMode, einkMode }) => {
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Pointer dragging state
@@ -207,7 +208,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
   const renderWidgetContent = (widget: WidgetConfig) => {
     switch (widget.type) {
       case "clock":
-        return <ClockWidget editMode={editMode} />;
+        return <ClockWidget editMode={editMode} einkMode={einkMode} />;
       case "date":
         return <DateWidget editMode={editMode} />;
       case "timer":
@@ -225,11 +226,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
       case "pomodoro":
         return <PomodoroWidget editMode={editMode} />;
       case "metronome":
-        return <MetronomeWidget />;
+        return <MetronomeWidget einkMode={einkMode} />;
       case "worldclock":
         return <WorldClockWidget editMode={editMode} />;
       case "breathing":
-        return <BreathingWidget />;
+        return <BreathingWidget einkMode={einkMode} />;
       case "eyestrain":
         return <EyeStrainWidget editMode={editMode} />;
       default:

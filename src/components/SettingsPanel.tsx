@@ -7,6 +7,7 @@ export interface AppSettings {
   focusWidth: number; // 1 - 8 (px)
   focusStyle: "solid" | "dashed" | "dotted" | "double";
   focusColor: string; // hex
+  einkMode: boolean;
 }
 
 interface SettingsPanelProps {
@@ -180,6 +181,29 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
               </button>
             ))}
           </div>
+        </div>
+
+        {/* E-ink Mode Toggle */}
+        <div className="space-y-3">
+          <label className="block text-lg font-bold text-[var(--color-text-main)]">
+            E-ink Optimization
+          </label>
+          <button
+            onClick={() => updateSetting("einkMode", !settings.einkMode)}
+            className={`w-full py-3 px-4 rounded-xl text-left font-bold text-lg border transition-all accessible-focus flex justify-between items-center ${
+              settings.einkMode
+                ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+            }`}
+          >
+            <span>E-ink Screen Friendly Mode</span>
+            <span className="text-sm font-extrabold px-2.5 py-1 rounded bg-black/20 border border-[var(--color-card-border)]">
+              {settings.einkMode ? "ON" : "OFF"}
+            </span>
+          </button>
+          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+            Disables all smooth layout transitions, visual animations, separator blinking, and color glows to prevent screen ghosting and excessive refresh cycles on Kindle, Kobo, or Onyx tablets.
+          </p>
         </div>
 
         {/* Focus Outline Color */}

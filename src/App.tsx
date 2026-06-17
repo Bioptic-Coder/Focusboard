@@ -5,12 +5,18 @@ import type { WidgetConfig } from "./components/Dashboard";
 import { SettingsPanel } from "./components/SettingsPanel";
 import type { AppSettings } from "./components/SettingsPanel";
 
+const isEinkDetected = (): boolean => {
+  if (typeof window === "undefined" || !navigator || !navigator.userAgent) return false;
+  return /Kindle|Silk|Kobo|Onyx|E-ink|Paperwhite|e-reader/i.test(navigator.userAgent);
+};
+
 const DEFAULT_SETTINGS: AppSettings = {
-  theme: "glass",
+  theme: isEinkDetected() ? "hc-light" : "glass",
   zoom: 120, // default 120% zoom is very readable for desk clocks
   focusWidth: 3,
   focusStyle: "dashed",
   focusColor: "#f59e0b", // Amber alert
+  einkMode: isEinkDetected(),
 };
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
@@ -26,7 +32,12 @@ function App() {
     const saved = localStorage.getItem("deskdash-settings");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_SETTINGS,
+          ...parsed,
+          einkMode: parsed.einkMode !== undefined ? parsed.einkMode : DEFAULT_SETTINGS.einkMode,
+        };
       } catch (_) {}
     }
     return DEFAULT_SETTINGS;
@@ -55,6 +66,12 @@ function App() {
     root.style.setProperty("--focus-width", `${settings.focusWidth}px`);
     root.style.setProperty("--focus-style", settings.focusStyle);
     root.style.setProperty("--focus-color", settings.focusColor);
+
+    if (settings.einkMode) {
+      root.setAttribute("data-eink", "true");
+    } else {
+      root.removeAttribute("data-eink");
+    }
   }, [settings]);
 
   // Sync widgets to localStorage
@@ -141,7 +158,7 @@ function App() {
 
       {/* Main Dashboard Workspace */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <Dashboard widgets={widgets} setWidgets={setWidgets} editMode={editMode} />
+        <Dashboard widgets={widgets} setWidgets={setWidgets} editMode={editMode} einkMode={settings.einkMode} />
       </main>
 
       {/* Settings Overlay side-drawer */}

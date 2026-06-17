@@ -8,6 +8,7 @@ const mockSettings: AppSettings = {
   focusWidth: 3,
   focusStyle: "dashed",
   focusColor: "#f59e0b",
+  einkMode: false,
 };
 
 describe("SettingsPanel Integration", () => {
@@ -80,6 +81,31 @@ describe("SettingsPanel Integration", () => {
     expect(mockOnChange).toHaveBeenCalledWith({
       ...mockSettings,
       zoom: 130, // 120 + 10
+    });
+  });
+
+  it("triggers onChange with updated einkMode when the eink button is clicked", () => {
+    const mockOnChange = vi.fn();
+    render(
+      <SettingsPanel
+        settings={mockSettings}
+        onChange={mockOnChange}
+        isOpen={true}
+        onClose={vi.fn()}
+        editMode={false}
+        onToggleEditMode={vi.fn()}
+        onResetLayout={vi.fn()}
+        onImportLayout={vi.fn()}
+        currentLayoutJson="[]"
+      />
+    );
+
+    const einkBtn = screen.getByRole("button", { name: /E-ink Screen Friendly Mode/i });
+    fireEvent.click(einkBtn);
+
+    expect(mockOnChange).toHaveBeenCalledWith({
+      ...mockSettings,
+      einkMode: true,
     });
   });
 });

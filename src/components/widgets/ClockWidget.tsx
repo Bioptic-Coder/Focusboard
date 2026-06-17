@@ -3,9 +3,10 @@ import { Eye, EyeOff } from "lucide-react";
 
 interface ClockWidgetProps {
   editMode: boolean;
+  einkMode?: boolean;
 }
 
-export const ClockWidget: React.FC<ClockWidgetProps> = ({ editMode }) => {
+export const ClockWidget: React.FC<ClockWidgetProps> = ({ editMode, einkMode }) => {
   const [time, setTime] = useState(new Date());
   const [is24Hour, setIs24Hour] = useState<boolean>(() => {
     return localStorage.getItem("clock-is24h") === "true";
@@ -17,19 +18,24 @@ export const ClockWidget: React.FC<ClockWidgetProps> = ({ editMode }) => {
 
   // Sync time every tick
   useEffect(() => {
+    const tickInterval = einkMode ? 1000 : (showSeconds ? 100 : 1000);
     const timer = setInterval(() => {
       setTime(new Date());
-    }, 100); // high frequency to keep seconds precise
+    }, tickInterval);
     return () => clearInterval(timer);
-  }, []);
+  }, [einkMode, showSeconds]);
 
   // Sync separator flashing
   useEffect(() => {
+    if (einkMode) {
+      setFlashSeparator(true);
+      return;
+    }
     const flashTimer = setInterval(() => {
       setFlashSeparator((prev) => !prev);
     }, 1000);
     return () => clearInterval(flashTimer);
-  }, []);
+  }, [einkMode]);
 
   // Save preferences
   const toggle24h = () => {
