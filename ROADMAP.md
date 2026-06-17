@@ -1,6 +1,6 @@
 # Focusboard — Product Tester Feedback & Tech Architecture Roadmap
 
-This document compiles the evaluations, accessibility audits, usability reports, and architectural reviews performed by our specialized product tester personas. It outlines a unified strategy to address critical bugs, improve compliance with accessibility standards (WCAG 2.2 AAA), and scale the codebase.
+This document compiles the evaluations, accessibility audits, usability reports, and architectural reviews performed by our specialized product tester feedback personas. It outlines a unified strategy to address critical bugs, improve compliance with accessibility standards (WCAG 2.2 AAA), and scale the codebase.
 
 ---
 
@@ -17,7 +17,7 @@ This document compiles the evaluations, accessibility audits, usability reports,
 | 7 | **Casey** | Power User & Productivity | ✅ Complete |
 | 8 | **Sam** | Senior & Elder Usability | ✅ Complete |
 | 9 | **Devon** | Software Architect & QA Engineer | ✅ Complete |
-| 10 | **Avery** | Mobile & PWA Device | 🔄 Running |
+| 10 | **Avery** | Mobile & PWA Device | ✅ Complete |
 
 ---
 
@@ -34,11 +34,12 @@ However, the team identified **systemic bugs and compliance issues** that must b
 
 1. **🔴 [StopwatchWidget](file:///Users/ericglasser/projects/Focusboard/src/components/widgets/StopwatchWidget.tsx) Leak**: Two concurrent `useEffect` loops run when active (1s and 10ms intervals). The 1s loop becomes orphaned and leaks, consuming CPU and causing performance degradation over start/stop cycles.
 2. **🔴 Fullscreen Overlay Focus Traps**: Keyboard focus leaks behind the [Stretch Alert dialog](file:///Users/ericglasser/projects/Focusboard/src/App.tsx#L549-L591) and [Time Cue overlays](file:///Users/ericglasser/projects/Focusboard/src/App.tsx#L520-L546), violating WCAG 2.4.3 (Focus Order).
-3. **🔴 AudioContext Over-Allocation**: AudioContext instances are instantiated dynamically for every single tone. High-frequency operations like the [Metronome](file:///Users/ericglasser/projects/Focusboard/src/components/widgets/MetronomeWidget.tsx) or repeating alarms will exceed browser hardware audio limits and crash the audio layer.
-4. **🔴 Viewport Zoom Blocked**: The meta tag in [index.html](file:///Users/ericglasser/projects/Focusboard/index.html#L6) disables pinch-to-zoom (`user-scalable=no`), preventing low-vision tablet users from using system scaling gestures.
-5. **🔴 Hidden Touch Controls**: Critical controls in [WeatherWidget](file:///Users/ericglasser/projects/Focusboard/src/components/widgets/WeatherWidget.tsx#L241) are hidden behind hover (`opacity-0 group-hover:opacity-100`), making them completely inaccessible on touch screens.
-6. **🟠 Timer Collision**: The Pomodoro timer, eye break timer, stretch alert, and time cues run on decentralized loops. Multiple timers can fire overlays, voice cues, and sound alarms simultaneously with no serialization or central queue.
-7. **🟠 Rendering Waste**: The dashboard re-renders the entire widget tree on every single pixel of pointer movement during widget dragging, rather than utilizing a lightweight layout preview.
+3. **🔴 PWA Cache Desynchronization**: The custom service worker in [sw.js](file:///Users/ericglasser/projects/Focusboard/public/sw.js) caches hashed assets dynamically at runtime using Stale-While-Revalidate. When a new version is deployed and the user is offline, the cached `index.html` references updated hashed JS bundle names that aren't in the cache, resulting in a blank screen crash.
+4. **🔴 AudioContext Over-Allocation**: AudioContext instances are instantiated dynamically for every single tone. High-frequency operations like the [Metronome](file:///Users/ericglasser/projects/Focusboard/src/components/widgets/MetronomeWidget.tsx) or repeating alarms will exceed browser hardware audio limits and crash the audio layer.
+5. **🔴 Viewport Zoom Blocked**: The meta tag in [index.html](file:///Users/ericglasser/projects/Focusboard/index.html#L6) disables pinch-to-zoom (`user-scalable=no`), preventing low-vision tablet users from using system scaling gestures.
+6. **🔴 Hidden Touch Controls**: Critical controls in [WeatherWidget](file:///Users/ericglasser/projects/Focusboard/src/components/widgets/WeatherWidget.tsx#L241) are hidden behind hover (`opacity-0 group-hover:opacity-100`), making them completely inaccessible on touch screens.
+7. **🟠 Timer Collision & Transient Loss**: Active timer widgets (Pomodoro, Timer, Stopwatch) store state purely in volatile React memory, resetting on reload or when the OS refreshes background web views. Additionally, these timers run on decentralized intervals and can alert/clash simultaneously with no central coordinator.
+8. **🟠 Rendering Waste & Mobile Squeezing**: The dashboard re-renders the entire widget tree on every single pixel of pointer movement during widget dragging. On mobile viewports, the rigid 12-column coordinate system squeezes widgets into unreadable, overlapping components.
 
 ---
 
@@ -196,6 +197,24 @@ However, the team identified **systemic bugs and compliance issues** that must b
 
 ---
 
+### 3.10 📱 Avery — Mobile & PWA Device Tester
+
+#### Key Findings
+* **PWA Offline Asset Drift**: The custom stale-while-revalidate dynamic caching handles hashed Vite assets (`assets/index-*.js`) unsafely. If the user loads an updated index cached in the background while offline, the browser requests the new hashed assets which do not exist in the offline cache, causing a blank-screen startup crash.
+* **CDN font dependency**: Atkinson Hyperlegible is retrieved at runtime from Google CDN. In offline conditions, cross-origin opaque response restrictions can prevent service worker caching, dropping hyperlegibility styling.
+* **Mobile Column Squeezing**: Stretched layout coordinates (`gridColumn: widget.x + 1 / span widget.w`) squeeze widgets to a width of under 120px on mobile screens, making text overflow and buttons clip.
+* **Timers Loss in Background**: Since running timers and Pomodoros are kept entirely in volatile React memory, they reset when mobile web views refresh in the background to reclaim system resources.
+* **Weather Service Offline Failure**: Launching the app offline renders `⚠️ Weather service unreachable`, displaying empty widgets with no last-known-data caching.
+
+#### Recommendations
+1. Write a post-build node script or use a Vite plugin to populate `ASSETS_TO_CACHE` in `sw.js` with correct hashed filenames automatically.
+2. Bundle Atkinson Hyperlegible files directly in the `public/` directory to satisfy the offline-first criteria.
+3. Implement a **Responsive Column Stacking fallback** using custom CSS variables (e.g. `--widget-x`) and media queries in `index.css` to collapse widgets to 12-column span on screens narrower than `768px`.
+4. Cache the weather forecasts locally via `localStorage` and display a fallback stamp (e.g. `"Offline — Cached 2 hours ago"`).
+5. Persist running timer target timestamps in `localStorage` on start, calculating elapsed drift on mount to maintain countdown state across background web view reloads.
+
+---
+
 ## 4. Consolidated Priority Matrix
 
 ### 🔴 P0 — Critical Fixes & Compliance (Immediate)
@@ -203,8 +222,10 @@ However, the team identified **systemic bugs and compliance issues** that must b
 | Target Item | Focus Area | Source | Effort |
 |-------------|------------|--------|--------|
 | **Fix Stopwatch Interval Leak** | Clean up duplicate `useEffect` hooks in [StopwatchWidget.tsx](file:///Users/ericglasser/projects/Focusboard/src/components/widgets/StopwatchWidget.tsx) | Devon, Sam | Small |
-| **Restore Viewport Scaling** | Remove `maximum-scale=1.0, user-scalable=no` from [index.html](file:///Users/ericglasser/projects/Focusboard/index.html) | Sam | Small |
+| **Restore Viewport Scaling** | Remove `maximum-scale=1.0, user-scalable=no` from [index.html](file:///Users/ericglasser/projects/Focusboard/index.html) | Sam, Avery | Small |
 | **Fix Modals Focus Trap** | Enforce focus trapping on Stretch Prompt and Time Cues | Alex, Morgan | Medium |
+| **PWA Cache Resolution** | Build script to generate static hashes cache in `sw.js` to prevent blank crashes | Avery | Medium |
+| **Bundle Fonts Locally** | Self-host Atkinson Hyperlegible font assets in `public/` for offline-first | Sam, Avery | Small |
 | **Ensure HC Light Contrast** | Eliminate low contrast colors (blue, amber, red) on HC Light theme | Sam | Small |
 | **Expose Touch Controls** | Remove hover requirement from weather and timer widgets controls | Sam, Morgan | Small |
 | **Secure Background Modals** | Apply `aria-hidden="true"` to app root when overlays are open | Alex | Small |
@@ -213,6 +234,9 @@ However, the team identified **systemic bugs and compliance issues** that must b
 
 | Target Item | Focus Area | Source | Effort |
 |-------------|------------|--------|--------|
+| **Responsive Stacking Grid** | Convert coordinates to CSS variables and stack widgets vertically on mobile screens | Avery | Medium |
+| **Weather Offline Caching** | Store last successful query in `localStorage` and show "offline — cached" badge | Avery | Small |
+| **Timer State Persistence** | Persist running timer targets to localStorage to survive PWA reloads/sleep | Avery, Devon | Small |
 | **Visual Caption Toasts** | Create overlay to display text captions for all audio triggers | Robin | Medium |
 | **Central Alert Coordinator** | Implement event coordinator context to serialize and queue timers | Jordan, Devon | Large |
 | **Direct Keyboard Navigation** | Enable Arrow Key movement/resize when a widget is focused | Morgan, Alex | Medium |
@@ -245,4 +269,3 @@ However, the team identified **systemic bugs and compliance issues** that must b
 | **Onboarding Tour** | Walk new users through layout editing, sizing, and widget selection | Charlie | Medium |
 | **Custom API/JSON Widget** | Call endpoint, parse JSONPath, and render results on dashboard | Casey | Large |
 | **Voice Command Suite** | Hands-free commands ("Add Clock", "Start Study", "Increase Zoom") | Morgan | Large |
-| **Self-Host Accessibility Fonts**| Host Atkinson Hyperlegible locally for offline reliability | Sam | Small |
