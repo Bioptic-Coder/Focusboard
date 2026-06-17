@@ -195,22 +195,22 @@ export const TimerWidget: React.FC = () => {
             <div className="flex flex-col items-center">
               <button
                 onClick={() => adjustUnit("h", 1)}
-                className="w-12 h-10 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-t-lg font-bold text-xl flex items-center justify-center border border-[var(--color-card-border)] border-b-0 accessible-focus"
+                className="w-12 h-8 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-t-lg font-bold text-xl flex items-center justify-center border border-[var(--color-card-border)] border-b-0 accessible-focus"
                 aria-label="Increase Hours"
               >
                 +
               </button>
-              <div className="w-12 h-12 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums select-none">
+              <div className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums select-none">
                 {hours}
               </div>
               <button
                 onClick={() => adjustUnit("h", -1)}
-                className="w-12 h-10 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-b-lg font-bold text-xl flex items-center justify-center border border-[var(--color-card-border)] border-t-0 accessible-focus"
+                className="w-12 h-8 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-b-lg font-bold text-xl flex items-center justify-center border border-[var(--color-card-border)] border-t-0 accessible-focus"
                 aria-label="Decrease Hours"
               >
                 -
               </button>
-              <span className="text-xs font-bold text-[var(--color-text-muted)] mt-1 uppercase">Hr</span>
+              <span className="text-xs font-bold text-[var(--color-text-muted)] mt-0.5 uppercase">Hr</span>
             </div>
 
             <span className="text-3xl font-bold text-[var(--color-text-muted)] pb-5">:</span>
@@ -219,22 +219,22 @@ export const TimerWidget: React.FC = () => {
             <div className="flex flex-col items-center">
               <button
                 onClick={() => adjustUnit("m", 5)}
-                className="w-12 h-10 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-t-lg font-bold text-sm flex items-center justify-center border border-[var(--color-card-border)] border-b-0 accessible-focus"
+                className="w-12 h-8 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-t-lg font-bold text-sm flex items-center justify-center border border-[var(--color-card-border)] border-b-0 accessible-focus"
                 aria-label="Increase Minutes by 5"
               >
                 +5
               </button>
-              <div className="w-12 h-12 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums">
+              <div className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums">
                 {String(minutes).padStart(2, "0")}
               </div>
               <button
                 onClick={() => adjustUnit("m", -5)}
-                className="w-12 h-10 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-b-lg font-bold text-sm flex items-center justify-center border border-[var(--color-card-border)] border-t-0 accessible-focus"
+                className="w-12 h-8 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-b-lg font-bold text-sm flex items-center justify-center border border-[var(--color-card-border)] border-t-0 accessible-focus"
                 aria-label="Decrease Minutes by 5"
               >
                 -5
               </button>
-              <span className="text-xs font-bold text-[var(--color-text-muted)] mt-1 uppercase">Min</span>
+              <span className="text-xs font-bold text-[var(--color-text-muted)] mt-0.5 uppercase">Min</span>
             </div>
 
             <span className="text-3xl font-bold text-[var(--color-text-muted)] pb-5">:</span>
@@ -243,22 +243,22 @@ export const TimerWidget: React.FC = () => {
             <div className="flex flex-col items-center">
               <button
                 onClick={() => adjustUnit("s", 15)}
-                className="w-12 h-10 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-t-lg font-bold text-xs flex items-center justify-center border border-[var(--color-card-border)] border-b-0 accessible-focus"
+                className="w-12 h-8 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-t-lg font-bold text-xs flex items-center justify-center border border-[var(--color-card-border)] border-b-0 accessible-focus"
                 aria-label="Increase Seconds by 15"
               >
                 +15
               </button>
-              <div className="w-12 h-12 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums">
+              <div className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums">
                 {String(seconds).padStart(2, "0")}
               </div>
               <button
                 onClick={() => adjustUnit("s", -15)}
-                className="w-12 h-10 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-b-lg font-bold text-xs flex items-center justify-center border border-[var(--color-card-border)] border-t-0 accessible-focus"
+                className="w-12 h-8 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 rounded-b-lg font-bold text-xs flex items-center justify-center border border-[var(--color-card-border)] border-t-0 accessible-focus"
                 aria-label="Decrease Seconds by 15"
               >
                 -15
               </button>
-              <span className="text-xs font-bold text-[var(--color-text-muted)] mt-1 uppercase">Sec</span>
+              <span className="text-xs font-bold text-[var(--color-text-muted)] mt-0.5 uppercase">Sec</span>
             </div>
           </div>
         ) : (
@@ -282,7 +282,7 @@ export const TimerWidget: React.FC = () => {
       </div>
 
       {/* Control Buttons */}
-      <div className="flex space-x-2 mt-3 w-full justify-center">
+      <div className="flex space-x-2 mt-2 w-full justify-center">
         {status === "idle" && (
           <button
             onClick={startTimer}
@@ -336,7 +336,7 @@ export const TimerWidget: React.FC = () => {
 
       {/* Quick Presets (only shown when not running/ringing for visual simplicity) */}
       {status === "idle" && (
-        <div className="flex space-x-1.5 mt-3 overflow-x-auto w-full max-w-xs justify-center py-1">
+        <div className="flex space-x-1.5 mt-2 overflow-x-auto w-full max-w-xs justify-center py-1">
           {[1, 5, 10, 25, 45].map((mins) => (
             <button
               key={mins}
