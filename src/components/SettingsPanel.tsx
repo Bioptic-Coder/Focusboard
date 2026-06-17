@@ -11,6 +11,9 @@ export interface AppSettings {
   timeCueInterval: 0 | 15 | 30 | 60; // minutes (0 is disabled)
   timeCueVisual: boolean;
   timeCueAudio: boolean;
+  timeCueVoice: boolean;
+  blueLightFilter: boolean;
+  stretchInterval: 0 | 30 | 60 | 120; // minutes (0 is disabled)
 }
 
 interface SettingsPanelProps {
@@ -268,13 +271,40 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </p>
         </div>
 
+        {/* Blue-Light Filter Toggle */}
+        <div className="space-y-3">
+          <label className="block text-lg font-bold text-[var(--color-text-main)]">
+            Blue-Light Filter (Screen Warmth)
+          </label>
+          <button
+            onClick={() => {
+              const nextVal = !settings.blueLightFilter;
+              updateSetting("blueLightFilter", nextVal);
+              announce(`Blue-light warmth filter ${nextVal ? "enabled" : "disabled"}`);
+            }}
+            className={`w-full py-3 px-4 rounded-xl text-left font-bold text-lg border transition-all accessible-focus flex justify-between items-center ${
+              settings.blueLightFilter
+                ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+            }`}
+          >
+            <span>Gradual Warm Screen Tint</span>
+            <span className="text-sm font-extrabold px-2.5 py-1 rounded bg-black/20 border border-[var(--color-card-border)]">
+              {settings.blueLightFilter ? "ON" : "OFF"}
+            </span>
+          </button>
+          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+            Gradually warms screen colors in the evening (6 PM to 10 PM) and maintains comfort throughout the night, reducing eye strain for low-light environments.
+          </p>
+        </div>
+
         {/* Periodic Time Announcements */}
         <div className="space-y-4 border-t border-[var(--color-card-border)] pt-6">
           <span className="block text-lg font-bold text-[var(--color-text-main)]">
             Periodic Time Announcements
           </span>
           <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-            Get automated visual or audio alerts at regular intervals to keep track of time.
+            Get automated visual, audio, or spoken voice alerts at regular intervals to keep track of time.
           </p>
 
           {/* Interval selection */}
@@ -309,7 +339,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
           </div>
 
           {/* Cue Types */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="grid grid-cols-1 gap-2 pt-1">
             <button
               type="button"
               onClick={() => {
@@ -375,6 +405,80 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 {settings.timeCueAudio ? "ON" : "OFF"}
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const nextVal = !settings.timeCueVoice;
+                updateSetting("timeCueVoice", nextVal);
+                announce(`Voice announcement cues ${nextVal ? "enabled" : "disabled"}`);
+                if (nextVal) {
+                  // Speak a short test phrase
+                  try {
+                    if (typeof window !== "undefined" && window.speechSynthesis) {
+                      window.speechSynthesis.cancel();
+                      const text = "Voice announcements enabled";
+                      const utterance = new SpeechSynthesisUtterance(text);
+                      if (window.speechSynthesis.getVoices) {
+                        const voices = window.speechSynthesis.getVoices();
+                        const voice = voices.find(v => 
+                          (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Siri") || v.name.includes("Premium")) && 
+                          v.lang.startsWith("en")
+                        ) || voices.find(v => v.lang.startsWith("en"));
+                        if (voice) utterance.voice = voice;
+                      }
+                      window.speechSynthesis.speak(utterance);
+                    }
+                  } catch (e) {
+                    console.warn("TTS test failed:", e);
+                  }
+                }
+              }}
+              className={`py-3 px-4 rounded-xl text-left font-bold text-sm border transition-all accessible-focus flex justify-between items-center ${
+                settings.timeCueVoice
+                  ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                  : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+              }`}
+            >
+              <span>Voice Announcement</span>
+              <span className="text-xs font-extrabold px-1.5 py-0.5 rounded bg-black/20 border border-[var(--color-card-border)]">
+                {settings.timeCueVoice ? "ON" : "OFF"}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Physical Stand & Stretch Alerts */}
+        <div className="space-y-4 border-t border-[var(--color-card-border)] pt-6">
+          <span className="block text-lg font-bold text-[var(--color-text-main)]">
+            Physical Stand & Stretch Alerts
+          </span>
+          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+            Get fullscreen alerts prompting you to stand and stretch to avoid desk fatigue.
+          </p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { value: 0, label: "Off" },
+              { value: 30, label: "30m" },
+              { value: 60, label: "1h" },
+              { value: 120, label: "2h" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  updateSetting("stretchInterval", opt.value as AppSettings["stretchInterval"]);
+                  announce(`Stand and stretch alerts set to ${opt.value === 0 ? "disabled" : `every ${opt.value} minutes`}`);
+                }}
+                className={`py-2 px-1 rounded-lg text-center font-bold text-sm border transition-all accessible-focus ${
+                  settings.stretchInterval === opt.value
+                    ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                    : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 

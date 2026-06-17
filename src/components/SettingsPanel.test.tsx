@@ -12,6 +12,9 @@ const mockSettings: AppSettings = {
   timeCueInterval: 0,
   timeCueVisual: true,
   timeCueAudio: true,
+  timeCueVoice: false,
+  blueLightFilter: false,
+  stretchInterval: 0,
 };
 
 describe("SettingsPanel Integration", () => {
@@ -113,6 +116,58 @@ describe("SettingsPanel Integration", () => {
     expect(mockOnChange).toHaveBeenCalledWith({
       ...mockSettings,
       einkMode: true,
+    });
+  });
+
+  it("triggers onChange with updated blueLightFilter when clicked", () => {
+    const mockOnChange = vi.fn();
+    render(
+      <SettingsPanel
+        settings={mockSettings}
+        onChange={mockOnChange}
+        isOpen={true}
+        onClose={vi.fn()}
+        editMode={false}
+        onToggleEditMode={vi.fn()}
+        onResetLayout={vi.fn()}
+        onImportLayout={vi.fn()}
+        currentLayoutJson="[]"
+        announce={vi.fn()}
+      />
+    );
+
+    const filterBtn = screen.getByRole("button", { name: /Gradual Warm Screen Tint/i });
+    fireEvent.click(filterBtn);
+
+    expect(mockOnChange).toHaveBeenCalledWith({
+      ...mockSettings,
+      blueLightFilter: true,
+    });
+  });
+
+  it("triggers onChange with updated timeCueVoice when clicked", () => {
+    const mockOnChange = vi.fn();
+    render(
+      <SettingsPanel
+        settings={mockSettings}
+        onChange={mockOnChange}
+        isOpen={true}
+        onClose={vi.fn()}
+        editMode={false}
+        onToggleEditMode={vi.fn()}
+        onResetLayout={vi.fn()}
+        onImportLayout={vi.fn()}
+        currentLayoutJson="[]"
+        announce={vi.fn()}
+      />
+    );
+
+    const voiceBtn = screen.getByRole("button", { name: /Voice Announcement/i });
+    fireEvent.click(voiceBtn);
+
+    expect(mockOnChange).toHaveBeenCalledWith({
+      ...mockSettings,
+      timeCueVoice: true,
     });
   });
 });
