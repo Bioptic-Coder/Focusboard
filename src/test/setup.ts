@@ -22,6 +22,7 @@ class MockAudioContext {
       gain: {
         setValueAtTime: () => {},
         linearRampToValueAtTime: () => {},
+        exponentialRampToValueAtTime: () => {},
       },
     };
   }

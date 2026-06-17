@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { LayoutGrid, Clock, Calendar, Hourglass, Timer as TimerIcon, FileText, Quote, Cloud, Calculator, Flame } from "lucide-react";
+import { LayoutGrid, Clock, Calendar, Hourglass, Timer as TimerIcon, FileText, Quote, Cloud, Calculator, Flame, Music, Globe, Wind, Eye } from "lucide-react";
 import { WidgetWrapper } from "./WidgetWrapper";
 
 // Widgets import placeholders
@@ -12,10 +12,14 @@ import { QuoteWidget } from "./widgets/QuoteWidget";
 import { WeatherWidget } from "./widgets/WeatherWidget";
 import { CalculatorWidget } from "./widgets/CalculatorWidget";
 import { PomodoroWidget } from "./widgets/PomodoroWidget";
+import { MetronomeWidget } from "./widgets/MetronomeWidget";
+import { WorldClockWidget } from "./widgets/WorldClockWidget";
+import { BreathingWidget } from "./widgets/BreathingWidget";
+import { EyeStrainWidget } from "./widgets/EyeStrainWidget";
 
 export interface WidgetConfig {
   id: string;
-  type: "clock" | "date" | "timer" | "stopwatch" | "quicknotes" | "quote" | "weather" | "calculator" | "pomodoro";
+  type: "clock" | "date" | "timer" | "stopwatch" | "quicknotes" | "quote" | "weather" | "calculator" | "pomodoro" | "metronome" | "worldclock" | "breathing" | "eyestrain";
   x: number; // 0-11
   y: number; // 0+
   w: number; // 1-12
@@ -76,6 +80,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     if (type === "weather") { w = 4; h = 2; }
     if (type === "calculator") { w = 4; h = 3; }
     if (type === "pomodoro") { w = 4; h = 2; }
+    if (type === "metronome") { w = 4; h = 2; }
+    if (type === "worldclock") { w = 6; h = 3; }
+    if (type === "breathing") { w = 4; h = 2; }
+    if (type === "eyestrain") { w = 4; h = 2; }
 
     const newWidget: WidgetConfig = {
       id: `${type}-${Date.now()}`,
@@ -216,6 +224,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
         return <CalculatorWidget />;
       case "pomodoro":
         return <PomodoroWidget editMode={editMode} />;
+      case "metronome":
+        return <MetronomeWidget />;
+      case "worldclock":
+        return <WorldClockWidget editMode={editMode} />;
+      case "breathing":
+        return <BreathingWidget />;
+      case "eyestrain":
+        return <EyeStrainWidget editMode={editMode} />;
       default:
         return <div>Unknown Widget</div>;
     }
@@ -293,6 +309,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
               className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
             >
               <Flame className="w-4 h-4 mr-1.5 text-red-500" /> + Pomodoro
+            </button>
+            <button
+              onClick={() => addWidget("metronome")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Music className="w-4 h-4 mr-1.5 text-indigo-400" /> + Metronome
+            </button>
+            <button
+              onClick={() => addWidget("worldclock")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Globe className="w-4 h-4 mr-1.5 text-cyan-400" /> + World Clock
+            </button>
+            <button
+              onClick={() => addWidget("breathing")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Wind className="w-4 h-4 mr-1.5 text-teal-400" /> + Breathe
+            </button>
+            <button
+              onClick={() => addWidget("eyestrain")}
+              className="py-2 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-zinc-100 hover:text-white rounded-lg flex items-center text-sm font-bold border border-[var(--color-card-border)] accessible-focus whitespace-nowrap"
+            >
+              <Eye className="w-4 h-4 mr-1.5 text-emerald-400" /> + Eye Break
             </button>
           </div>
         </div>
