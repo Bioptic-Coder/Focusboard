@@ -20,6 +20,7 @@ interface SettingsPanelProps {
   onResetLayout: () => void;
   onImportLayout: (layoutJson: string) => boolean;
   currentLayoutJson: string;
+  announce: (text: string) => void;
 }
 
 const COLOR_OPTIONS = [
@@ -48,11 +49,62 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onResetLayout,
   onImportLayout,
   currentLayoutJson,
+  announce,
 }) => {
   const [copied, setCopied] = React.useState(false);
   const [importText, setImportText] = React.useState("");
   const [importError, setImportError] = React.useState(false);
   const [importSuccess, setImportSuccess] = React.useState(false);
+
+  const panelRef = React.useRef<HTMLDivElement>(null);
+
+  // Focus trap and Escape key listener
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    // Focus first focusable element when opened
+    const focusableElements = panelRef.current?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusableElements && focusableElements.length > 0) {
+      // Focus the close button or first element
+      focusableElements[0].focus();
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key === "Tab" && panelRef.current) {
+        const els = panelRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!els || els.length === 0) return;
+
+        const firstEl = els[0];
+        const lastEl = els[els.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstEl) {
+            lastEl.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastEl) {
+            firstEl.focus();
+            e.preventDefault();
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -73,6 +125,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     if (success) {
       setImportSuccess(true);
       setImportText("");
+      announce("Dashboard layout configuration successfully imported.");
       setTimeout(() => setImportSuccess(false), 2000);
     } else {
       setImportError(true);
@@ -80,7 +133,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] glass-card rounded-r-none border-y-0 border-r-0 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-heading"
+      className="fixed inset-y-0 right-0 z-50 w-full sm:w-[420px] glass-card rounded-r-none border-y-0 border-r-0 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200"
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-[var(--color-card-border)]">
         <h2 className="text-2xl font-bold text-[var(--color-text-main)]" id="settings-heading">
@@ -331,6 +390,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
             onClick={() => {
               if (confirm("Are you sure you want to reset all widgets to the default layout? Your current positions will be lost.")) {
                 onResetLayout();
+                announce("Dashboard layout reset to default widgets.");
               }
             }}
             className="w-full py-4 bg-red-600/10 hover:bg-red-600 hover:text-white text-red-500 border border-red-500/30 hover:border-red-600 rounded-xl font-bold flex items-center justify-center transition-all duration-150 accessible-focus"

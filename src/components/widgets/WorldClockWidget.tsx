@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 
 interface WorldClockWidgetProps {
   editMode: boolean;
+  announce?: (text: string) => void;
 }
 
 const SUPPORTED_ZONES = [
@@ -124,7 +125,7 @@ export const WorldClockWidget: React.FC<WorldClockWidgetProps> = ({ editMode }) 
           <div
             className={`px-2 py-0.5 text-xs font-extrabold rounded-lg border flex items-center space-x-1 ${status.color}`}
           >
-            <span>{status.icon}</span>
+            <span aria-hidden="true">{status.icon}</span>
             <span className="uppercase tracking-wide">{status.label}</span>
           </div>
 
@@ -148,11 +149,11 @@ export const WorldClockWidget: React.FC<WorldClockWidgetProps> = ({ editMode }) 
       {/* Hour Comparison Slider */}
       <div className="mt-4 pt-3 border-t border-[var(--color-card-border)] w-full">
         <div className="flex justify-between items-center text-xs font-bold text-[var(--color-text-muted)] mb-1">
-          <span>⏪ Past Hours</span>
+          <span aria-hidden="true">⏪ Past Hours</span>
           <span className="text-amber-500 font-extrabold text-sm px-2 bg-amber-500/10 border border-amber-500/25 rounded-lg">
             {offset === 0 ? "🕒 NOW" : offset > 0 ? `➕${offset} hours` : `➖${Math.abs(offset)} hours`}
           </span>
-          <span>Future Hours ⏩</span>
+          <span aria-hidden="true">Future Hours ⏩</span>
         </div>
         <div className="flex items-center space-x-3">
           <input
@@ -164,6 +165,7 @@ export const WorldClockWidget: React.FC<WorldClockWidgetProps> = ({ editMode }) 
             onChange={(e) => setOffset(parseInt(e.target.value, 10))}
             className="w-full h-2 bg-black/40 rounded-lg appearance-none cursor-pointer focus:outline-none border border-[var(--color-card-border)] accent-blue-500 accessible-focus"
             aria-label="Time Comparison Offset Slider"
+            aria-valuetext={offset === 0 ? "Current Time" : offset > 0 ? `Plus ${offset} hour${offset > 1 ? "s" : ""}` : `Minus ${Math.abs(offset)} hour${Math.abs(offset) > 1 ? "s" : ""}`}
           />
           {offset !== 0 && (
             <button

@@ -1,32 +1,49 @@
 import React, { useState } from "react";
 import { Delete } from "lucide-react";
 
-export const CalculatorWidget: React.FC = () => {
+interface CalculatorWidgetProps {
+  announce?: (text: string) => void;
+}
+
+export const CalculatorWidget: React.FC<CalculatorWidgetProps> = ({ announce }) => {
   const [display, setDisplay] = useState("0");
   const [equation, setEquation] = useState("");
   const [shouldReset, setShouldReset] = useState(false);
 
   const handleNum = (num: string) => {
+    let nextVal = num;
     if (display === "0" || shouldReset) {
       setDisplay(num);
       setShouldReset(false);
     } else {
-      setDisplay(display + num);
+      nextVal = display + num;
+      setDisplay(nextVal);
     }
+    announce?.(nextVal);
   };
 
   const handleDecimal = () => {
     if (shouldReset) {
       setDisplay("0.");
+      announce?.("0 point");
       setShouldReset(false);
       return;
     }
     if (!display.includes(".")) {
       setDisplay(display + ".");
+      announce?.(`${display} point`);
     }
   };
 
   const handleOp = (op: string) => {
+    const opNames: Record<string, string> = {
+      "+": "plus",
+      "-": "minus",
+      "×": "times",
+      "÷": "divided by"
+    };
+    const friendlyOp = opNames[op] || op;
+    announce?.(`${display} ${friendlyOp}`);
     setEquation(display + " " + op + " ");
     setShouldReset(true);
   };
@@ -34,6 +51,7 @@ export const CalculatorWidget: React.FC = () => {
   const handleClear = () => {
     setDisplay("0");
     setEquation("");
+    announce?.("Cleared");
     setShouldReset(false);
   };
 
@@ -42,11 +60,14 @@ export const CalculatorWidget: React.FC = () => {
       handleClear();
       return;
     }
+    let nextVal = "0";
     if (display.length > 1) {
-      setDisplay(display.slice(0, -1));
+      nextVal = display.slice(0, -1);
+      setDisplay(nextVal);
     } else {
       setDisplay("0");
     }
+    announce?.(nextVal);
   };
 
   const handleEqual = () => {
@@ -75,6 +96,7 @@ export const CalculatorWidget: React.FC = () => {
       case "÷":
         if (num2 === 0) {
           setDisplay("Error");
+          announce?.("Error: Division by zero");
           setEquation("");
           setShouldReset(true);
           return;
@@ -87,8 +109,10 @@ export const CalculatorWidget: React.FC = () => {
 
     // Format result to avoid floats expansion e.g., 0.1+0.2=0.3000000000004
     const rounded = Math.round(result * 100000000) / 100000000;
+    const finalVal = String(rounded);
     
-    setDisplay(String(rounded));
+    setDisplay(finalVal);
+    announce?.(`Equals ${finalVal}`);
     setEquation("");
     setShouldReset(true);
   };
@@ -97,7 +121,12 @@ export const CalculatorWidget: React.FC = () => {
     <div className="w-full h-full flex flex-col justify-between p-1 select-none">
       
       {/* Display Screen */}
-      <div className="bg-black/40 border border-[var(--color-card-border)] rounded-xl p-3 mb-2 text-right flex flex-col justify-end h-18 overflow-hidden">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="bg-black/40 border border-[var(--color-card-border)] rounded-xl p-3 mb-2 text-right flex flex-col justify-end h-18 overflow-hidden"
+      >
         {equation ? (
           <div className="text-sm font-bold text-[var(--color-text-muted)] truncate select-none font-mono">
             {equation}

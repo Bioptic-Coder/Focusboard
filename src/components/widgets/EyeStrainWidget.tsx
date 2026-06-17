@@ -3,9 +3,10 @@ import { Play, Pause, RotateCcw, Volume2, VolumeX, Eye } from "lucide-react";
 
 interface EyeStrainWidgetProps {
   editMode: boolean;
+  announce?: (text: string) => void;
 }
 
-export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode }) => {
+export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode, announce }) => {
   const [timeLeft, setTimeLeft] = useState<number>(20 * 60); // 20 minutes in seconds
   const [breakTimeLeft, setBreakTimeLeft] = useState<number>(20); // 20 seconds eye break
   const [status, setStatus] = useState<"running" | "paused" | "break">("running");
@@ -64,19 +65,23 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode }) =>
     setStatus("break");
     setBreakTimeLeft(20);
     playAlarmSound(true); // Play start-break chime
+    announce?.("Rest break started. Look 20 feet away for 20 seconds.");
   };
 
   const finishBreak = () => {
     setStatus("running");
     setTimeLeft(20 * 60); // Reset main timer to 20 mins
     playAlarmSound(false); // Play end-break chime
+    announce?.("Rest break finished. Work timer restarted.");
   };
 
   const handlePause = () => {
     if (status === "running") {
       setStatus("paused");
+      announce?.("Eye break timer paused.");
     } else if (status === "paused") {
       setStatus("running");
+      announce?.("Eye break timer started.");
     }
   };
 
@@ -84,6 +89,7 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode }) =>
     setStatus("running");
     setTimeLeft(20 * 60);
     setBreakTimeLeft(20);
+    announce?.("Eye break timer reset.");
   };
 
   const playAlarmSound = (isStart: boolean) => {
@@ -145,8 +151,8 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode }) =>
     <div className="w-full h-full flex flex-col items-center justify-between p-1 select-none text-[var(--color-text-main)] relative">
       {/* 20-Second Active Break Overlay */}
       {status === "break" && (
-        <div className="absolute inset-0 bg-black/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-4 z-20 border-2 border-emerald-500 animate-in fade-in duration-200">
-          <Eye className="w-12 h-12 text-emerald-400 mb-2 animate-bounce" />
+        <div role="alert" className="absolute inset-0 bg-black/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-4 z-20 border-2 border-emerald-500 animate-in fade-in duration-200">
+          <Eye className="w-12 h-12 text-emerald-400 mb-2 animate-bounce" aria-hidden="true" />
           <h4 className="text-xl font-black text-white text-center leading-tight uppercase tracking-wide">
             Look 20 feet away!
           </h4>
@@ -169,11 +175,15 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode }) =>
 
       {/* Main Countdown Display */}
       <div className="flex flex-col items-center justify-center my-auto">
-        <div className="text-4xl font-extrabold tabular-nums font-mono tracking-tight">
+        <div
+          role="timer"
+          aria-label={`Eye strain break timer: ${formatTime(timeLeft)} remaining before next break`}
+          className="text-4xl font-extrabold tabular-nums font-mono tracking-tight"
+        >
           {formatTime(timeLeft)}
         </div>
         <div className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] tracking-widest mt-1 flex items-center">
-          <Eye className="w-3.5 h-3.5 mr-1 text-blue-400" /> Eye Break Timer
+          <Eye className="w-3.5 h-3.5 mr-1 text-blue-400" aria-hidden="true" /> Eye Break Timer
         </div>
       </div>
 

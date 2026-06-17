@@ -3,9 +3,10 @@ import { Play, Pause, Plus, Minus } from "lucide-react";
 
 interface MetronomeWidgetProps {
   einkMode?: boolean;
+  announce?: (text: string) => void;
 }
 
-export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode }) => {
+export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode, announce }) => {
   const [bpm, setBpm] = useState<number>(120);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentBeat, setCurrentBeat] = useState<number>(1);
@@ -100,23 +101,27 @@ export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode }) =>
       // Clamp BPM between 30 and 300
       const clampedBpm = Math.max(30, Math.min(300, computedBpm));
       setBpm(clampedBpm);
+      announce?.(`Tapped tempo set to ${clampedBpm} beats per minute.`);
     }
   };
 
   const adjustBpm = (delta: number) => {
-    setBpm((prev) => Math.max(30, Math.min(300, prev + delta)));
+    setBpm((prev) => {
+      const newVal = Math.max(30, Math.min(300, prev + delta));
+      announce?.(`Metronome speed set to ${newVal} beats per minute.`);
+      return newVal;
+    });
   };
 
   return (
     <div className="w-full flex flex-col items-center select-none text-[var(--color-text-main)]">
       {/* Visual Indicator Dots */}
-      <div className="flex justify-center items-center space-x-3 mb-3">
+      <div className="flex justify-center items-center space-x-3 mb-3" aria-hidden="true">
         {[1, 2, 3, 4].map((b) => {
           const isActive = isPlaying && currentBeat === b;
           return (
             <div
               key={b}
-              aria-label={`Beat ${b} indicator`}
               className={`w-6 h-6 rounded-full border border-[var(--color-text-main)] ${
                 isActive
                   ? einkMode
@@ -144,7 +149,25 @@ export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode }) =>
           <Minus className="w-6 h-6" />
         </button>
 
-        <div className="text-center min-w-[100px]">
+        <div
+          role="spinbutton"
+          aria-valuenow={bpm}
+          aria-valuemin={30}
+          aria-valuemax={300}
+          aria-label="Beats Per Minute"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp") {
+              adjustBpm(1);
+              e.preventDefault();
+            }
+            if (e.key === "ArrowDown") {
+              adjustBpm(-1);
+              e.preventDefault();
+            }
+          }}
+          className="text-center min-w-[100px] cursor-pointer accessible-focus rounded-xl p-1"
+        >
           <span className="text-4xl font-extrabold tabular-nums block tracking-tight">
             {bpm}
           </span>
@@ -166,7 +189,11 @@ export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode }) =>
       {/* Action Buttons */}
       <div className="flex items-center space-x-3 w-full max-w-[280px]">
         <button
-          onClick={() => setIsPlaying(!isPlaying)}
+          onClick={() => {
+            const nextPlaying = !isPlaying;
+            setIsPlaying(nextPlaying);
+            announce?.(nextPlaying ? "Metronome started." : "Metronome stopped.");
+          }}
           className={`flex-1 py-3 px-4 rounded-xl text-base font-bold transition-colors flex items-center justify-center border border-transparent accessible-focus ${
             isPlaying
               ? "bg-red-600 hover:bg-red-700 text-white"

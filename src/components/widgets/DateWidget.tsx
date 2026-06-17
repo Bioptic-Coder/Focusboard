@@ -39,44 +39,50 @@ export const DateWidget: React.FC<DateWidgetProps> = ({ editMode }) => {
       
       {/* Date display based on styling selection */}
       <div className="flex-1 flex flex-col justify-center items-center">
-        {styleMode === "standard" && (
-          <div className="space-y-1">
-            <div className="text-4xl sm:text-5xl font-extrabold text-blue-400 tracking-tight">
-              {weekday}
+        <time
+          dateTime={date.toISOString()}
+          aria-label={`Today is ${weekday}, ${month} ${dayNum}, ${year}`}
+          className="flex flex-col items-center justify-center"
+        >
+          {styleMode === "standard" && (
+            <div className="space-y-1">
+              <div className="text-4xl sm:text-5xl font-extrabold text-blue-400 tracking-tight">
+                {weekday}
+              </div>
+              <div className="text-3xl sm:text-4xl font-bold text-[var(--color-text-main)]">
+                {month} {dayNum}
+              </div>
+              <div className="text-xl sm:text-2xl text-[var(--color-text-muted)] tracking-wider">
+                {year}
+              </div>
             </div>
-            <div className="text-3xl sm:text-4xl font-bold text-[var(--color-text-main)]">
-              {month} {dayNum}
-            </div>
-            <div className="text-xl sm:text-2xl text-[var(--color-text-muted)] tracking-wider">
-              {year}
-            </div>
-          </div>
-        )}
+          )}
 
-        {styleMode === "compact" && (
-          <div className="text-3xl sm:text-4xl font-bold text-[var(--color-text-main)] leading-normal">
-            <div>{weekday}</div>
-            <div className="text-blue-400">
-              {dayNum}/{date.getMonth() + 1}/{year}
+          {styleMode === "compact" && (
+            <div className="text-3xl sm:text-4xl font-bold text-[var(--color-text-main)] leading-normal">
+              <div>{weekday}</div>
+              <div className="text-blue-400">
+                {dayNum}/{date.getMonth() + 1}/{year}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {styleMode === "calendar" && (
-          <div className="w-32 h-36 rounded-2xl overflow-hidden border border-[var(--color-card-border)] bg-zinc-900/60 shadow-lg flex flex-col">
-            <div className="bg-red-500 text-white font-bold text-center py-1.5 uppercase text-sm tracking-wider">
-              {month.substring(0, 3)}
+          {styleMode === "calendar" && (
+            <div className="w-32 h-36 rounded-2xl overflow-hidden border border-[var(--color-card-border)] bg-zinc-900/60 shadow-lg flex flex-col">
+              <div className="bg-red-500 text-white font-bold text-center py-1.5 uppercase text-sm tracking-wider">
+                {month.substring(0, 3)}
+              </div>
+              <div className="flex-1 flex flex-col justify-center items-center bg-transparent">
+                <span className="text-4xl sm:text-5xl font-extrabold text-[var(--color-text-main)] tabular-nums leading-none">
+                  {dayNum}
+                </span>
+                <span className="text-xs font-bold text-[var(--color-text-muted)] mt-1 uppercase">
+                  {weekday.substring(0, 3)}
+                </span>
+              </div>
             </div>
-            <div className="flex-1 flex flex-col justify-center items-center bg-transparent">
-              <span className="text-4xl sm:text-5xl font-extrabold text-[var(--color-text-main)] tabular-nums leading-none">
-                {dayNum}
-              </span>
-              <span className="text-xs font-bold text-[var(--color-text-muted)] mt-1 uppercase">
-                {weekday.substring(0, 3)}
-              </span>
-            </div>
-          </div>
-        )}
+          )}
+        </time>
       </div>
 
       {/* Style selectors - Only visible in Edit Mode */}
@@ -91,6 +97,7 @@ export const DateWidget: React.FC<DateWidgetProps> = ({ editMode }) => {
                   ? "border-blue-500 bg-blue-500/10 text-blue-400"
                   : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
               }`}
+              aria-label={`Switch date display style to ${mode}`}
             >
               {mode}
             </button>

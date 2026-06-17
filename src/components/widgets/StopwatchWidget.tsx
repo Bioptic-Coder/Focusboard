@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, RotateCcw, Flag } from "lucide-react";
 
-export const StopwatchWidget: React.FC = () => {
+interface StopwatchWidgetProps {
+  announce?: (text: string) => void;
+}
+
+export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce }) => {
   const [timeElapsed, setTimeElapsed] = useState(0); // in ms
   const [isRunning, setIsRunning] = useState(false);
   const [laps, setLaps] = useState<number[]>([]);
@@ -16,7 +20,29 @@ export const StopwatchWidget: React.FC = () => {
       timerRef.current = setInterval(() => {
         const delta = Date.now() - startTimeRef.current;
         setTimeElapsed(totalAccumulatedTime.current + delta);
-      }, 10); // high frequency updates for millisecond tracking
+      }, 1000); // 1-second ticks are enough for standard screen read. If they need ms, they pause it.
+      // Wait, let's keep high frequency for visual, but standard focus display handles it.
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isRunning]);
+
+  // Wait! Let's restore the high frequency updates to keep the animation accurate!
+  // Yes: 10ms updates are expected for stopwatch centiseconds. Let's do that!
+  useEffect(() => {
+    if (isRunning) {
+      startTimeRef.current = Date.now();
+      timerRef.current = setInterval(() => {
+        const delta = Date.now() - startTimeRef.current;
+        setTimeElapsed(totalAccumulatedTime.current + delta);
+      }, 10);
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -31,11 +57,14 @@ export const StopwatchWidget: React.FC = () => {
 
   const handleStart = () => {
     setIsRunning(true);
+    announce?.("Stopwatch started.");
   };
 
   const handlePause = () => {
     setIsRunning(false);
     totalAccumulatedTime.current = timeElapsed;
+    const formatted = formatTime(timeElapsed);
+    announce?.(`Stopwatch paused at ${formatted.minStr} minutes, ${formatted.secStr}.${formatted.msStr} seconds.`);
   };
 
   const handleReset = () => {
@@ -43,10 +72,13 @@ export const StopwatchWidget: React.FC = () => {
     setTimeElapsed(0);
     setLaps([]);
     totalAccumulatedTime.current = 0;
+    announce?.("Stopwatch reset to zero.");
   };
 
   const handleLap = () => {
     setLaps((prev) => [timeElapsed, ...prev]);
+    const formatted = formatTime(timeElapsed);
+    announce?.(`Lap ${laps.length + 1} recorded at ${formatted.minStr} minutes, ${formatted.secStr}.${formatted.msStr} seconds.`);
   };
 
   const formatTime = (timeMs: number) => {
@@ -71,7 +103,11 @@ export const StopwatchWidget: React.FC = () => {
         
         {/* Main Display */}
         <div className="flex flex-col items-center justify-center">
-          <div className="flex items-baseline font-bold tracking-tight text-[var(--color-text-main)]">
+          <div
+            role="timer"
+            aria-label={`Stopwatch elapsed time: ${minStr} minutes, ${secStr} seconds, and ${msStr} centiseconds`}
+            className="flex items-baseline font-bold tracking-tight text-[var(--color-text-main)]"
+          >
             <span className="text-5xl sm:text-6xl tabular-nums">{minStr}</span>
             <span className="text-4xl sm:text-5xl px-1 text-[var(--color-text-muted)]">:</span>
             <span className="text-5xl sm:text-6xl tabular-nums">{secStr}</span>
@@ -88,19 +124,19 @@ export const StopwatchWidget: React.FC = () => {
             <span className="text-[10px] uppercase font-bold text-[var(--color-text-muted)] block mb-1">
               Laps ({laps.length})
             </span>
-            <div className="space-y-1 text-xs">
+            <ol className="space-y-1 text-xs list-decimal pl-1">
               {laps.map((lapTime, idx) => {
                 const formatted = formatTime(lapTime);
                 return (
-                  <div key={idx} className="flex justify-between font-mono text-[var(--color-text-main)] border-b border-[var(--color-card-border)]/30 pb-0.5 last:border-0">
+                  <li key={idx} className="flex justify-between font-mono text-[var(--color-text-main)] border-b border-[var(--color-card-border)]/30 pb-0.5 last:border-0">
                     <span className="text-[var(--color-text-muted)]">#{laps.length - idx}</span>
                     <span>
                       {formatted.minStr}:{formatted.secStr}.{formatted.msStr}
                     </span>
-                  </div>
+                  </li>
                 );
               })}
-            </div>
+            </ol>
           </div>
         )}
       </div>

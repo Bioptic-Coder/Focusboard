@@ -32,9 +32,10 @@ interface DashboardProps {
   setWidgets: (widgets: WidgetConfig[]) => void;
   editMode: boolean;
   einkMode: boolean;
+  announce: (text: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editMode, einkMode }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editMode, einkMode, announce }) => {
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Pointer dragging state
@@ -60,7 +61,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
   } | null>(null);
 
   const handleDelete = (id: string) => {
+    const widget = widgets.find((w) => w.id === id);
     setWidgets(widgets.filter((w) => w.id !== id));
+    if (widget) {
+      announce(`Deleted ${widget.title || widget.type} widget.`);
+    }
   };
 
   const handleUpdateWidget = (id: string, updates: Partial<WidgetConfig>) => {
@@ -97,6 +102,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     };
 
     setWidgets([...widgets, newWidget]);
+    announce(`Added ${type.toUpperCase()} widget at the bottom of your layout.`);
   };
 
   // Pointer Drag Handler (captures both touch and mouse)
@@ -141,12 +147,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     handleUpdateWidget(activeDragId, { x: nextX, y: nextY });
   };
 
-  const handleDragEnd = (e: React.PointerEvent, _id: string) => {
+  const handleDragEnd = (e: React.PointerEvent, id: string) => {
     const target = e.target as HTMLElement;
     try {
       target.releasePointerCapture(e.pointerId);
     } catch (err) {
       // Safely ignore capture release issues
+    }
+    const widget = widgets.find((w) => w.id === id);
+    if (widget) {
+      announce(`${widget.title || widget.type} widget layout position updated. Now at column ${widget.x + 1}, row ${widget.y + 1}.`);
     }
     setActiveDragId(null);
     dragStartInfo.current = null;
@@ -193,12 +203,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     handleUpdateWidget(activeResizeId, { w: nextW, h: nextH });
   };
 
-  const handleResizeEnd = (e: React.PointerEvent, _id: string) => {
+  const handleResizeEnd = (e: React.PointerEvent, id: string) => {
     const target = e.target as HTMLElement;
     try {
       target.releasePointerCapture(e.pointerId);
     } catch (err) {
       // Safely ignore
+    }
+    const widget = widgets.find((w) => w.id === id);
+    if (widget) {
+      announce(`${widget.title || widget.type} widget dimensions updated. Width ${widget.w}, height ${widget.h}.`);
     }
     setActiveResizeId(null);
     resizeStartInfo.current = null;
@@ -212,27 +226,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
       case "date":
         return <DateWidget editMode={editMode} />;
       case "timer":
-        return <TimerWidget />;
+        return <TimerWidget announce={announce} />;
       case "stopwatch":
-        return <StopwatchWidget />;
+        return <StopwatchWidget announce={announce} />;
       case "quicknotes":
         return <QuickNotesWidget />;
       case "quote":
-        return <QuoteWidget />;
+        return <QuoteWidget announce={announce} />;
       case "weather":
         return <WeatherWidget />;
       case "calculator":
-        return <CalculatorWidget />;
+        return <CalculatorWidget announce={announce} />;
       case "pomodoro":
-        return <PomodoroWidget editMode={editMode} />;
+        return <PomodoroWidget editMode={editMode} announce={announce} />;
       case "metronome":
-        return <MetronomeWidget einkMode={einkMode} />;
+        return <MetronomeWidget einkMode={einkMode} announce={announce} />;
       case "worldclock":
-        return <WorldClockWidget editMode={editMode} />;
+        return <WorldClockWidget editMode={editMode} announce={announce} />;
       case "breathing":
-        return <BreathingWidget einkMode={einkMode} />;
+        return <BreathingWidget einkMode={einkMode} announce={announce} />;
       case "eyestrain":
-        return <EyeStrainWidget editMode={editMode} />;
+        return <EyeStrainWidget editMode={editMode} announce={announce} />;
       default:
         return <div>Unknown Widget</div>;
     }
@@ -376,6 +390,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
               onResizeStart={handleResizeStart}
               onDragEnd={handleDragEnd}
               onResizeEnd={handleResizeEnd}
+              announce={announce}
             >
               {renderWidgetContent(widget)}
             </WidgetWrapper>

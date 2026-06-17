@@ -85,13 +85,15 @@ body {
   flex-direction: column;
 }
 
-/* Custom Accessibility Outline class */
-.accessible-focus {
-  outline: none;
-  transition: outline-color 0.15s ease-in-out, outline-offset 0.15s ease-in-out;
-}
-
-.accessible-focus:focus-visible {
+.accessible-focus:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[role="spinbutton"]:focus-visible,
+[tabindex]:focus-visible {
   outline: var(--focus-width) var(--focus-style) var(--focus-color) !important;
   outline-offset: 3px !important;
   z-index: 50;

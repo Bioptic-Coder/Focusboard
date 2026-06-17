@@ -29,9 +29,10 @@ const MODE_CONFIGS = {
 
 interface PomodoroWidgetProps {
   editMode: boolean;
+  announce?: (text: string) => void;
 }
 
-export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode }) => {
+export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode, announce }) => {
   const [mode, setMode] = useState<PomodoroMode>("work");
   const [timeLeft, setTimeLeft] = useState(MODE_CONFIGS.work.duration);
   const [isRunning, setIsRunning] = useState(false);
@@ -74,11 +75,14 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode }) => {
       // Every 4th work cycle, trigger a long break
       if (nextCount % 4 === 0) {
         switchMode("longBreak");
+        announce?.("Focus session finished! Starting a 15-minute long break.");
       } else {
         switchMode("break");
+        announce?.("Focus session finished! Starting a 5-minute short break.");
       }
     } else {
       switchMode("work");
+      announce?.("Break finished! Starting a 25-minute focus session.");
     }
   };
 
@@ -124,12 +128,20 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode }) => {
     }
   };
 
-  const handleStart = () => setIsRunning(true);
-  const handlePause = () => setIsRunning(false);
+  const handleStart = () => {
+    setIsRunning(true);
+    announce?.("Pomodoro timer started.");
+  };
+  
+  const handlePause = () => {
+    setIsRunning(false);
+    announce?.(`Pomodoro timer paused. ${formatTime(timeLeft)} remaining.`);
+  };
   
   const handleReset = () => {
     setIsRunning(false);
     setTimeLeft(MODE_CONFIGS[mode].duration);
+    announce?.("Pomodoro timer reset.");
   };
 
   const handleSkip = () => {
@@ -154,7 +166,7 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode }) => {
       {/* Header Info */}
       <div className="flex justify-between items-center w-full px-1">
         <div className="flex items-center space-x-1">
-          <ModeIcon className={`w-5 h-5 ${activeConfig.colorClass}`} />
+          <ModeIcon className={`w-5 h-5 ${activeConfig.colorClass}`} aria-hidden="true" />
           <span className={`text-base font-extrabold ${activeConfig.colorClass} uppercase tracking-wider`}>
             {activeConfig.label}
           </span>
@@ -166,12 +178,23 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode }) => {
 
       {/* Timer Countdown Display */}
       <div className="flex-1 w-full flex flex-col justify-center items-center py-2">
-        <div className="text-5xl sm:text-6xl font-black tabular-nums tracking-tight text-[var(--color-text-main)]">
+        <div
+          role="timer"
+          aria-label={`Time remaining in ${activeConfig.label}: ${formatTime(timeLeft)}`}
+          className="text-5xl sm:text-6xl font-black tabular-nums tracking-tight text-[var(--color-text-main)]"
+        >
           {formatTime(timeLeft)}
         </div>
         
         {/* Progress Bar */}
-        <div className="w-full max-w-xs h-2.5 bg-zinc-800/80 rounded-full overflow-hidden border border-[var(--color-card-border)] mt-3">
+        <div
+          role="progressbar"
+          aria-valuenow={Math.round(progressPercent)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`${activeConfig.label} progress`}
+          className="w-full max-w-xs h-2.5 bg-zinc-800/80 rounded-full overflow-hidden border border-[var(--color-card-border)] mt-3"
+        >
           <div
             className={`h-full rounded-full transition-all duration-1000 ease-linear ${
               mode === "work" ? "bg-amber-500" : mode === "break" ? "bg-emerald-500" : "bg-blue-500"

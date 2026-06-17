@@ -34,10 +34,14 @@ const LOCAL_QUOTES: Quote[] = [
   { text: "To be yourself in a world that is constantly trying to make you something else is the greatest accomplishment.", author: "Ralph Waldo Emerson" },
 ];
 
-export const QuoteWidget: React.FC = () => {
+interface QuoteWidgetProps {
+  announce?: (text: string) => void;
+}
+
+export const QuoteWidget: React.FC<QuoteWidgetProps> = ({ announce }) => {
   const [quote, setQuote] = useState<Quote>(LOCAL_QUOTES[0]);
 
-  const getRandomQuote = () => {
+  const getRandomQuote = (isInitial = false) => {
     const currentIndex = LOCAL_QUOTES.indexOf(quote);
     let newIndex = currentIndex;
     
@@ -46,19 +50,23 @@ export const QuoteWidget: React.FC = () => {
       newIndex = Math.floor(Math.random() * LOCAL_QUOTES.length);
     }
     
-    setQuote(LOCAL_QUOTES[newIndex]);
+    const nextQuote = LOCAL_QUOTES[newIndex];
+    setQuote(nextQuote);
+    if (!isInitial) {
+      announce?.(`New quote loaded: "${nextQuote.text}" by ${nextQuote.author}`);
+    }
   };
 
   // Select a random quote on mount
   useEffect(() => {
-    getRandomQuote();
+    getRandomQuote(true);
   }, []);
 
   return (
     <div className="w-full h-full flex flex-col justify-between items-center p-2 relative text-center select-none group">
       
       {/* Decorative Quote Icon */}
-      <div className="absolute top-2 left-2 opacity-5 text-[var(--color-text-main)] pointer-events-none">
+      <div className="absolute top-2 left-2 opacity-5 text-[var(--color-text-main)] pointer-events-none" aria-hidden="true">
         <QuoteIcon className="w-16 h-16" />
       </div>
 
@@ -75,7 +83,7 @@ export const QuoteWidget: React.FC = () => {
       {/* Control bar */}
       <div className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 mt-2">
         <button
-          onClick={getRandomQuote}
+          onClick={() => getRandomQuote(false)}
           className="py-1.5 px-4 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] flex items-center accessible-focus"
           aria-label="Get another random quote"
         >

@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, RotateCcw, VolumeX, AlertTriangle } from "lucide-react";
 
-export const TimerWidget: React.FC = () => {
+interface TimerWidgetProps {
+  announce?: (text: string) => void;
+}
+
+export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
@@ -53,6 +57,7 @@ export const TimerWidget: React.FC = () => {
       clearInterval(timerInterval.current);
       timerInterval.current = null;
     }
+    announce?.("Timer finished! Alarm is ringing.");
 
     // Play synthesized beep alarm loop
     playBeep();
@@ -180,8 +185,8 @@ export const TimerWidget: React.FC = () => {
     >
       {/* Visual Header / Alarm Display */}
       {status === "ringing" && (
-        <div className="flex items-center text-red-500 font-extrabold animate-bounce mb-1">
-          <AlertTriangle className="w-5 h-5 mr-1" />
+        <div role="alert" className="flex items-center text-red-500 font-extrabold animate-bounce mb-1">
+          <AlertTriangle className="w-5 h-5 mr-1" aria-hidden="true" />
           <span className="text-lg">TIMER FINISHED!</span>
         </div>
       )}
@@ -200,7 +205,25 @@ export const TimerWidget: React.FC = () => {
               >
                 +
               </button>
-              <div className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums select-none">
+              <div
+                role="spinbutton"
+                aria-valuenow={hours}
+                aria-valuemin={0}
+                aria-valuemax={23}
+                aria-label="Hours"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp") {
+                    adjustUnit("h", 1);
+                    e.preventDefault();
+                  }
+                  if (e.key === "ArrowDown") {
+                    adjustUnit("h", -1);
+                    e.preventDefault();
+                  }
+                }}
+                className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums select-none accessible-focus rounded-sm"
+              >
                 {hours}
               </div>
               <button
@@ -224,7 +247,25 @@ export const TimerWidget: React.FC = () => {
               >
                 +5
               </button>
-              <div className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums">
+              <div
+                role="spinbutton"
+                aria-valuenow={minutes}
+                aria-valuemin={0}
+                aria-valuemax={59}
+                aria-label="Minutes"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp") {
+                    adjustUnit("m", 1);
+                    e.preventDefault();
+                  }
+                  if (e.key === "ArrowDown") {
+                    adjustUnit("m", -1);
+                    e.preventDefault();
+                  }
+                }}
+                className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums select-none accessible-focus rounded-sm"
+              >
                 {String(minutes).padStart(2, "0")}
               </div>
               <button
@@ -248,7 +289,25 @@ export const TimerWidget: React.FC = () => {
               >
                 +15
               </button>
-              <div className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums">
+              <div
+                role="spinbutton"
+                aria-valuenow={seconds}
+                aria-valuemin={0}
+                aria-valuemax={59}
+                aria-label="Seconds"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp") {
+                    adjustUnit("s", 1);
+                    e.preventDefault();
+                  }
+                  if (e.key === "ArrowDown") {
+                    adjustUnit("s", -1);
+                    e.preventDefault();
+                  }
+                }}
+                className="w-12 h-10 flex items-center justify-center font-bold text-2xl bg-black/40 text-[var(--color-text-main)] border-x border-[var(--color-card-border)] tabular-nums select-none accessible-focus rounded-sm"
+              >
                 {String(seconds).padStart(2, "0")}
               </div>
               <button
@@ -264,13 +323,24 @@ export const TimerWidget: React.FC = () => {
         ) : (
           /* Active Countdown display */
           <div className="flex flex-col items-center space-y-2 w-full px-6">
-            <div className="text-5xl sm:text-6xl font-extrabold tabular-nums tracking-tight text-[var(--color-text-main)]">
+            <div
+              role="timer"
+              aria-label={`Time remaining: ${formatTime(timeLeft)}`}
+              className="text-5xl sm:text-6xl font-extrabold tabular-nums tracking-tight text-[var(--color-text-main)]"
+            >
               {formatTime(timeLeft)}
             </div>
             
             {/* Visual Progress Bar */}
             {status !== "ringing" && (
-              <div className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden border border-[var(--color-card-border)]">
+              <div
+                role="progressbar"
+                aria-valuenow={Math.round(percentage)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Timer progress"
+                className="w-full h-3 bg-zinc-800 rounded-full overflow-hidden border border-[var(--color-card-border)]"
+              >
                 <div
                   className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-linear"
                   style={{ width: `${percentage}%` }}

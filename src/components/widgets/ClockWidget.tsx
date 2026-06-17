@@ -63,12 +63,20 @@ export const ClockWidget: React.FC<ClockWidgetProps> = ({ editMode, einkMode }) 
     hours = hours ? hours : 12; // 0 should be 12
   }
 
+  const formattedTime = is24Hour
+    ? `${pad(hours)}:${pad(minutes)}${showSeconds ? `:${pad(seconds)}` : ""}`
+    : `${hours}:${pad(minutes)}${showSeconds ? `:${pad(seconds)}` : ""} ${ampm}`;
+
   return (
     <div className="w-full h-full flex flex-col justify-between items-center text-center relative p-2 select-none group">
       
       {/* Time Display */}
       <div className="flex-1 flex flex-col justify-center items-center">
-        <div className="flex items-baseline justify-center font-bold tracking-tight">
+        <time
+          dateTime={time.toISOString()}
+          aria-label={`Current time: ${formattedTime}`}
+          className="flex items-baseline justify-center font-bold tracking-tight"
+        >
           {/* Hours */}
           <span className="text-6xl sm:text-7xl md:text-8xl tabular-nums text-[var(--color-text-main)]">
             {is24Hour ? pad(hours) : hours}
@@ -106,7 +114,7 @@ export const ClockWidget: React.FC<ClockWidgetProps> = ({ editMode, einkMode }) 
               {ampm}
             </span>
           )}
-        </div>
+        </time>
       </div>
 
       {/* Options Bar - Only visible in Edit Mode */}

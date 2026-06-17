@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Settings, LayoutGrid } from "lucide-react";
 import { Dashboard } from "./components/Dashboard";
 import type { WidgetConfig } from "./components/Dashboard";
@@ -55,6 +55,25 @@ function App() {
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [announcement, setAnnouncement] = useState<string>("");
+
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  const wasSettingsOpen = useRef(false);
+
+  // Return focus to settings button on close
+  useEffect(() => {
+    if (!isSettingsOpen && wasSettingsOpen.current) {
+      settingsButtonRef.current?.focus();
+    }
+    wasSettingsOpen.current = isSettingsOpen;
+  }, [isSettingsOpen]);
+
+  const announce = (text: string) => {
+    setAnnouncement("");
+    setTimeout(() => {
+      setAnnouncement(text);
+    }, 50);
+  };
 
   // Apply settings to document element
   useEffect(() => {
@@ -90,7 +109,7 @@ function App() {
         const isValid = parsed.every(
           (w: any) =>
             typeof w.id === "string" &&
-            ["clock", "date", "timer", "stopwatch", "quicknotes"].includes(w.type) &&
+            ["clock", "date", "timer", "stopwatch", "quicknotes", "quote", "weather", "calculator", "pomodoro", "metronome", "worldclock", "breathing", "eyestrain"].includes(w.type) &&
             typeof w.x === "number" &&
             typeof w.y === "number" &&
             typeof w.w === "number" &&
@@ -108,6 +127,11 @@ function App() {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-[var(--color-dashboard-bg)] text-[var(--color-text-main)] transition-colors duration-200">
       
+      {/* Screen Reader Live Announcement Region */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
+
       {/* Top Header Bar */}
       <header className="flex justify-between items-center px-6 py-4 border-b border-[var(--color-card-border)] bg-black/20 backdrop-blur-md z-30 shrink-0">
         <div className="flex items-center space-x-3">
@@ -146,6 +170,7 @@ function App() {
           </button>
 
           <button
+            ref={settingsButtonRef}
             onClick={() => setIsSettingsOpen(true)}
             className="p-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] border border-[var(--color-card-border)] rounded-xl text-[var(--color-text-main)] transition-colors accessible-focus"
             title="Open Accessibility Settings"
@@ -158,7 +183,7 @@ function App() {
 
       {/* Main Dashboard Workspace */}
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <Dashboard widgets={widgets} setWidgets={setWidgets} editMode={editMode} einkMode={settings.einkMode} />
+        <Dashboard widgets={widgets} setWidgets={setWidgets} editMode={editMode} einkMode={settings.einkMode} announce={announce} />
       </main>
 
       {/* Settings Overlay side-drawer */}
@@ -172,6 +197,7 @@ function App() {
         onResetLayout={handleResetLayout}
         onImportLayout={handleImportLayout}
         currentLayoutJson={JSON.stringify(widgets, null, 2)}
+        announce={announce}
       />
       
       {/* Background click overlay when settings is open */}
@@ -179,6 +205,7 @@ function App() {
         <div
           onClick={() => setIsSettingsOpen(false)}
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+          aria-hidden="true"
         />
       )}
     </div>

@@ -31,9 +31,10 @@ type PatternType = "box" | "calm" | "equal";
 
 interface BreathingWidgetProps {
   einkMode?: boolean;
+  announce?: (text: string) => void;
 }
 
-export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode }) => {
+export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode, announce }) => {
   const [patternType, setPatternType] = useState<PatternType>("box");
   const [isActive, setIsActive] = useState<boolean>(false);
   const [stepIndex, setStepIndex] = useState<number>(0);
@@ -64,8 +65,10 @@ export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode }) =>
             // Move to next step
             setStepIndex((idx) => {
               const nextIdx = (idx + 1) % pattern.length;
-              setTimeLeft(pattern[nextIdx].duration);
+              const nextStep = pattern[nextIdx];
+              setTimeLeft(nextStep.duration);
               playTransitionChime();
+              announce?.(`Breathing: ${nextStep.label}. ${nextStep.duration} seconds.`);
               return nextIdx;
             });
             return 0; // Temp placeholder, reset by stepIndex update
@@ -83,7 +86,6 @@ export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode }) =>
   }, [isActive, patternType]);
 
   const stopSession = () => {
-    setIsActive(false);
     clearTimers();
     setStepIndex(0);
     setTimeLeft(pattern[0].duration);
@@ -208,10 +210,18 @@ export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode }) =>
       {/* Action Controls */}
       <div className="flex items-center space-x-2 w-full max-w-[240px]">
         <button
-          onClick={() => setIsActive(!isActive)}
+          onClick={() => {
+            const nextActive = !isActive;
+            setIsActive(nextActive);
+            if (nextActive) {
+              announce?.(`Breathing session started. First step is: ${pattern[0].label} for ${pattern[0].duration} seconds.`);
+            } else {
+              announce?.("Breathing session stopped.");
+            }
+          }}
           className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-extrabold transition-colors flex items-center justify-center border border-transparent accessible-focus ${
             isActive
-              ? "bg-zinc-700 hover:bg-zinc-600 text-white"
+              ? "bg-zinc-700 hover:bg-zinc-650 text-white"
               : "bg-blue-600 hover:bg-blue-700 text-white"
           }`}
           aria-label={isActive ? "Stop breathing exercise" : "Start breathing exercise"}

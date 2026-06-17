@@ -25,6 +25,7 @@ describe("SettingsPanel Integration", () => {
         onResetLayout={vi.fn()}
         onImportLayout={vi.fn()}
         currentLayoutJson="[]"
+        announce={vi.fn()}
       />
     );
 
@@ -47,6 +48,7 @@ describe("SettingsPanel Integration", () => {
         onResetLayout={vi.fn()}
         onImportLayout={vi.fn()}
         currentLayoutJson="[]"
+        announce={vi.fn()}
       />
     );
 
@@ -72,6 +74,7 @@ describe("SettingsPanel Integration", () => {
         onResetLayout={vi.fn()}
         onImportLayout={vi.fn()}
         currentLayoutJson="[]"
+        announce={vi.fn()}
       />
     );
 
@@ -97,6 +100,7 @@ describe("SettingsPanel Integration", () => {
         onResetLayout={vi.fn()}
         onImportLayout={vi.fn()}
         currentLayoutJson="[]"
+        announce={vi.fn()}
       />
     );
 

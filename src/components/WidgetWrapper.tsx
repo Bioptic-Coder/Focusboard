@@ -12,6 +12,7 @@ interface WidgetWrapperProps {
   onResizeStart: (e: React.PointerEvent, id: string) => void;
   onDragEnd: (e: React.PointerEvent, id: string) => void;
   onResizeEnd: (e: React.PointerEvent, id: string) => void;
+  announce: (text: string) => void;
 }
 
 export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
@@ -24,6 +25,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
   onResizeStart,
   onDragEnd,
   onResizeEnd,
+  announce,
 }) => {
   // Grid coordinates map to tailwind style or inline style.
   // Tailwind v4 uses standard CSS variables or inline styles for dynamic grid coordinates.
@@ -40,6 +42,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
     if (direction === "left") x = Math.max(0, x - 1);
     if (direction === "right") x = Math.min(12 - widget.w, x + 1);
     onUpdate(widget.id, { x, y });
+    announce(`${widget.title || widget.type} moved ${direction}. New position: column ${x + 1}, row ${y + 1}.`);
   };
 
   const handleResize = (type: "grow-w" | "shrink-w" | "grow-h" | "shrink-h") => {
@@ -49,6 +52,8 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
     if (type === "grow-h") h += 1;
     if (type === "shrink-h") h = Math.max(1, h - 1);
     onUpdate(widget.id, { w, h });
+    const changeDesc = type === "grow-w" ? "expanded width" : type === "shrink-w" ? "shrunk width" : type === "grow-h" ? "expanded height" : "shrunk height";
+    announce(`${widget.title || widget.type} ${changeDesc}. New dimensions: width ${w}, height ${h}.`);
   };
 
   return (
@@ -57,7 +62,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
       className={`glass-card flex flex-col relative transition-shadow duration-150 accessible-focus group ${
         editMode ? "border-dashed border-amber-500/60 ring-2 ring-amber-500/10 cursor-default" : ""
       }`}
-      tabIndex={0}
+      tabIndex={editMode ? 0 : -1}
       aria-label={`${widget.title || widget.type} widget. Grid position column ${widget.x + 1}, row ${
         widget.y + 1
       }, width ${widget.w}, height ${widget.h}.`}
@@ -104,6 +109,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             className="absolute top-2 right-10 p-1.5 bg-[var(--color-control-bg)] hover:bg-amber-500 hover:text-black text-[var(--color-text-main)] rounded-lg cursor-grab active:cursor-grabbing transition-colors"
             title="Drag widget"
             aria-label="Drag widget handle"
+            aria-hidden="true"
           >
             <Move className="w-4 h-4" />
           </div>
@@ -115,6 +121,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             className="absolute bottom-2 right-2 p-1.5 bg-[var(--color-control-bg)] hover:bg-amber-500 hover:text-black text-[var(--color-text-main)] rounded-lg cursor-se-resize transition-colors"
             title="Resize widget"
             aria-label="Resize widget handle"
+            aria-hidden="true"
           >
             <Maximize2 className="w-4.5 h-4.5 rotate-90" />
           </div>
@@ -126,7 +133,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleMove("up")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Move Up"
-              aria-label="Move Up"
+              aria-label={`Move ${widget.title || widget.type} Up`}
             >
               <ArrowUp className="w-4 h-4" />
             </button>
@@ -134,7 +141,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleMove("down")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Move Down"
-              aria-label="Move Down"
+              aria-label={`Move ${widget.title || widget.type} Down`}
             >
               <ArrowDown className="w-4 h-4" />
             </button>
@@ -142,7 +149,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleMove("left")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Move Left"
-              aria-label="Move Left"
+              aria-label={`Move ${widget.title || widget.type} Left`}
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
@@ -150,7 +157,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleMove("right")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Move Right"
-              aria-label="Move Right"
+              aria-label={`Move ${widget.title || widget.type} Right`}
             >
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -162,7 +169,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleResize("shrink-w")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Shrink Width"
-              aria-label="Shrink Width"
+              aria-label={`Shrink ${widget.title || widget.type} Width`}
             >
               <Shrink className="w-4 h-4" />
             </button>
@@ -170,7 +177,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleResize("grow-w")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Expand Width"
-              aria-label="Expand Width"
+              aria-label={`Expand ${widget.title || widget.type} Width`}
             >
               <Expand className="w-4 h-4" />
             </button>
@@ -178,7 +185,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleResize("shrink-h")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Shrink Height"
-              aria-label="Shrink Height"
+              aria-label={`Shrink ${widget.title || widget.type} Height`}
             >
               <ArrowDown className="w-4 h-4 scale-y-[-1]" />
             </button>
@@ -186,7 +193,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               onClick={() => handleResize("grow-h")}
               className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
               title="Expand Height"
-              aria-label="Expand Height"
+              aria-label={`Expand ${widget.title || widget.type} Height`}
             >
               <ArrowDown className="w-4 h-4" />
             </button>
