@@ -27,7 +27,11 @@ const MODE_CONFIGS = {
   },
 };
 
-export const PomodoroWidget: React.FC = () => {
+interface PomodoroWidgetProps {
+  editMode: boolean;
+}
+
+export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode }) => {
   const [mode, setMode] = useState<PomodoroMode>("work");
   const [timeLeft, setTimeLeft] = useState(MODE_CONFIGS.work.duration);
   const [isRunning, setIsRunning] = useState(false);
@@ -215,26 +219,28 @@ export const PomodoroWidget: React.FC = () => {
         </button>
       </div>
 
-      {/* Mode Selectors */}
-      <div className="flex space-x-1.5 mt-2.5 overflow-x-auto w-full justify-center">
-        {(["work", "break", "longBreak"] as const).map((m) => (
-          <button
-            key={m}
-            onClick={() => switchMode(m)}
-            className={`py-1 px-2 text-[10px] uppercase font-bold rounded-lg border transition-colors whitespace-nowrap accessible-focus ${
-              mode === m
-                ? m === "work"
-                  ? "border-amber-500 bg-amber-500/15 text-amber-400"
-                  : m === "break"
-                  ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
-                  : "border-blue-500 bg-blue-500/15 text-blue-400"
-                : "border-[var(--color-card-border)] bg-black/20 text-[var(--color-text-muted)] hover:bg-[var(--color-control-hover)] hover:text-[var(--color-text-main)]"
-            }`}
-          >
-            {m === "longBreak" ? "Long" : m}
-          </button>
-        ))}
-      </div>
+      {/* Mode Selectors - Only visible in Edit Mode */}
+      {editMode && (
+        <div className="flex space-x-1.5 mt-2.5 overflow-x-auto w-full justify-center">
+          {(["work", "break", "longBreak"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => switchMode(m)}
+              className={`py-1 px-2 text-[10px] uppercase font-bold rounded-lg border transition-colors whitespace-nowrap accessible-focus ${
+                mode === m
+                  ? m === "work"
+                    ? "border-amber-500 bg-amber-500/15 text-amber-400"
+                    : m === "break"
+                    ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                    : "border-blue-500 bg-blue-500/15 text-blue-400"
+                  : "border-[var(--color-card-border)] bg-black/20 text-[var(--color-text-muted)] hover:bg-[var(--color-control-hover)] hover:text-[var(--color-text-main)]"
+              }`}
+            >
+              {m === "longBreak" ? "Long" : m}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

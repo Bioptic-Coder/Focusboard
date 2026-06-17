@@ -199,9 +199,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
   const renderWidgetContent = (widget: WidgetConfig) => {
     switch (widget.type) {
       case "clock":
-        return <ClockWidget />;
+        return <ClockWidget editMode={editMode} />;
       case "date":
-        return <DateWidget />;
+        return <DateWidget editMode={editMode} />;
       case "timer":
         return <TimerWidget />;
       case "stopwatch":
@@ -215,7 +215,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
       case "calculator":
         return <CalculatorWidget />;
       case "pomodoro":
-        return <PomodoroWidget />;
+        return <PomodoroWidget editMode={editMode} />;
       default:
         return <div>Unknown Widget</div>;
     }

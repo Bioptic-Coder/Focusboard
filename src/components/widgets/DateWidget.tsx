@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-export const DateWidget: React.FC = () => {
+interface DateWidgetProps {
+  editMode: boolean;
+}
+
+export const DateWidget: React.FC<DateWidgetProps> = ({ editMode }) => {
   const [date, setDate] = useState(new Date());
   const [styleMode, setStyleMode] = useState<"standard" | "compact" | "calendar">(
     () => (localStorage.getItem("date-style") as any) || "standard"
@@ -75,22 +79,24 @@ export const DateWidget: React.FC = () => {
         )}
       </div>
 
-      {/* Widget Settings Toggle (shown on hover/focus) */}
-      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 mt-2">
-        {(["standard", "compact", "calendar"] as const).map((mode) => (
-          <button
-            key={mode}
-            onClick={() => changeStyle(mode)}
-            className={`py-1 px-2.5 text-xs font-bold rounded-lg border transition-colors capitalize accessible-focus ${
-              styleMode === mode
-                ? "border-blue-500 bg-blue-500/10 text-blue-400"
-                : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
-            }`}
-          >
-            {mode}
-          </button>
-        ))}
-      </div>
+      {/* Style selectors - Only visible in Edit Mode */}
+      {editMode && (
+        <div className="flex space-x-1 mt-2">
+          {(["standard", "compact", "calendar"] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => changeStyle(mode)}
+              className={`py-1 px-2.5 text-xs font-bold rounded-lg border transition-colors capitalize accessible-focus ${
+                styleMode === mode
+                  ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                  : "border-[var(--color-card-border)] bg-[var(--color-control-bg)] text-[var(--color-text-main)] hover:bg-[var(--color-control-hover)]"
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

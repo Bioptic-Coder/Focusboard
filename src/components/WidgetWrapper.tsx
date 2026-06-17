@@ -88,7 +88,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
       </div>
 
       {/* Widget Content */}
-      <div className="flex-1 p-4 overflow-y-auto w-full flex flex-col items-center">
+      <div className="flex-1 p-4 overflow-hidden w-full flex flex-col items-center">
         <div className="my-auto w-full flex flex-col items-center">
           {children}
         </div>

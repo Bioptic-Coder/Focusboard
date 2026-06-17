@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
-export const ClockWidget: React.FC = () => {
+interface ClockWidgetProps {
+  editMode: boolean;
+}
+
+export const ClockWidget: React.FC<ClockWidgetProps> = ({ editMode }) => {
   const [time, setTime] = useState(new Date());
   const [is24Hour, setIs24Hour] = useState<boolean>(() => {
     return localStorage.getItem("clock-is24h") === "true";
@@ -99,31 +103,33 @@ export const ClockWidget: React.FC = () => {
         </div>
       </div>
 
-      {/* Hover/Focus Control Bar */}
-      <div className="flex space-x-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 mt-2">
-        <button
-          onClick={toggle24h}
-          className="py-1.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] accessible-focus"
-          aria-label={is24Hour ? "Switch to 12 hour mode" : "Switch to 24 hour mode"}
-        >
-          {is24Hour ? "24H Mode" : "12H Mode"}
-        </button>
-        <button
-          onClick={toggleSeconds}
-          className="py-1.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] flex items-center accessible-focus"
-          aria-label={showSeconds ? "Hide seconds" : "Show seconds"}
-        >
-          {showSeconds ? (
-            <>
-              <EyeOff className="w-3.5 h-3.5 mr-1" /> No Sec
-            </>
-          ) : (
-            <>
-              <Eye className="w-3.5 h-3.5 mr-1" /> Show Sec
-            </>
-          )}
-        </button>
-      </div>
+      {/* Options Bar - Only visible in Edit Mode */}
+      {editMode && (
+        <div className="flex space-x-2 mt-2">
+          <button
+            onClick={toggle24h}
+            className="py-1.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] accessible-focus"
+            aria-label={is24Hour ? "Switch to 12 hour mode" : "Switch to 24 hour mode"}
+          >
+            {is24Hour ? "24H Mode" : "12H Mode"}
+          </button>
+          <button
+            onClick={toggleSeconds}
+            className="py-1.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] flex items-center accessible-focus"
+            aria-label={showSeconds ? "Hide seconds" : "Show seconds"}
+          >
+            {showSeconds ? (
+              <>
+                <EyeOff className="w-3.5 h-3.5 mr-1" /> No Sec
+              </>
+            ) : (
+              <>
+                <Eye className="w-3.5 h-3.5 mr-1" /> Show Sec
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
