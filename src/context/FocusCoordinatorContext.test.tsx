@@ -3,8 +3,7 @@ import { render, screen, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   FocusCoordinatorProvider,
-  useFocusCoordinator,
-  CHIME_DESCRIPTIONS
+  useFocusCoordinator
 } from "./FocusCoordinatorContext";
 
 // Unmock context for this unit test file by returning the original implementation

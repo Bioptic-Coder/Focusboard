@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { Activity, Eye, AlertTriangle } from "lucide-react";
@@ -27,7 +28,7 @@ export interface Alert {
 
 export type ChimeType = "cue" | "stretchStart" | "stretchEnd" | "eyeStrainStart" | "eyeStrainEnd" | "timerAlarm" | "pomodoro" | "breathing";
 
-export const CHIME_DESCRIPTIONS: Record<ChimeType, string> = {
+const CHIME_DESCRIPTIONS: Record<ChimeType, string> = {
   cue: "[Chime: hourly time cue]",
   stretchStart: "[Chime: stretch break started]",
   stretchEnd: "[Chime: stretch break completed]",
