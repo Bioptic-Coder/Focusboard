@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { Activity, Eye, AlertTriangle } from "lucide-react";
 import {
@@ -26,6 +27,17 @@ export interface Alert {
 
 export type ChimeType = "cue" | "stretchStart" | "stretchEnd" | "eyeStrainStart" | "eyeStrainEnd" | "timerAlarm" | "pomodoro" | "breathing";
 
+export const CHIME_DESCRIPTIONS: Record<ChimeType, string> = {
+  cue: "[Chime: hourly time cue]",
+  stretchStart: "[Chime: stretch break started]",
+  stretchEnd: "[Chime: stretch break completed]",
+  eyeStrainStart: "[Chime: eye strain break started]",
+  eyeStrainEnd: "[Chime: eye strain break completed]",
+  timerAlarm: "[Alarm: timer ringing]",
+  pomodoro: "[Chime: pomodoro session started]",
+  breathing: "[Chime: transition cue]"
+};
+
 interface FocusCoordinatorContextType {
   activeAlert: Alert | null;
   queueAlert: (alert: Omit<Alert, "id">) => void;
@@ -34,6 +46,7 @@ interface FocusCoordinatorContextType {
   queueSpeak: (text: string) => void;
   playChime: (type: ChimeType) => void;
   isFallback?: boolean;
+  caption?: string | null;
 }
 
 const FocusCoordinatorContext = createContext<FocusCoordinatorContextType | undefined>(undefined);
@@ -48,7 +61,8 @@ export const useFocusCoordinator = () => {
       skipActiveAlert: () => {},
       queueSpeak: () => {},
       playChime: () => {},
-      isFallback: true
+      isFallback: true,
+      caption: null
     };
   }
   return context;
@@ -63,6 +77,36 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
   const [activeAlert, setActiveAlert] = useState<Alert | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
+  // Caption State for DHH
+  const [caption, setCaption] = useState<string | null>(null);
+  const captionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const updateCaption = useCallback((text: string) => {
+    setCaption((prev) => {
+      // Combine chime description and spoken text if triggered back-to-back
+      if (prev && (prev.startsWith("[Chime:") || prev.startsWith("[Alarm:")) && !text.startsWith("[")) {
+        return `${prev} ${text}`;
+      }
+      return text;
+    });
+
+    if (captionTimeoutRef.current) {
+      clearTimeout(captionTimeoutRef.current);
+    }
+    captionTimeoutRef.current = setTimeout(() => {
+      setCaption(null);
+    }, 3500);
+  }, []);
+
+  // Cleanup caption timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (captionTimeoutRef.current) {
+        clearTimeout(captionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Speech Queue Refs
   const speechQueueRef = useRef<string[]>([]);
   const isSpeakingRef = useRef<boolean>(false);
@@ -73,14 +117,7 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
   const eyeStrainSkipButtonRef = useRef<HTMLButtonElement>(null);
   const timerStopButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Queue Text-to-Speech Announcements
-  const queueSpeak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    speechQueueRef.current.push(text);
-    processSpeechQueue();
-  }, []);
-
-  const processSpeechQueue = useCallback(() => {
+  function processSpeechQueue() {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     if (isSpeakingRef.current || speechQueueRef.current.length === 0) return;
 
@@ -111,10 +148,20 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
     };
 
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }
+
+  // Queue Text-to-Speech Announcements
+  const queueSpeak = useCallback((text: string) => {
+    updateCaption(text);
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    speechQueueRef.current.push(text);
+    processSpeechQueue();
+  }, [updateCaption]);
 
   // Play chimes using the shared AudioContext
   const playChime = useCallback((type: ChimeType) => {
+    const desc = CHIME_DESCRIPTIONS[type] || `[Chime: ${type}]`;
+    updateCaption(desc);
     try {
       const ctx = getSharedAudioContext();
       if (ctx.state === "suspended") {
@@ -149,7 +196,7 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
     } catch (err) {
       console.warn("Failed to play chime:", err);
     }
-  }, []);
+  }, [updateCaption]);
 
   // Queue Alert
   const queueAlert = useCallback((alertConfig: Omit<Alert, "id">) => {
@@ -179,6 +226,7 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
           clearInterval(interval);
           const cb = activeAlert.onComplete;
           setActiveAlert(null); // Will trigger next alert in next render loop
+          setCaption(null); // Clear caption on timer completion
           if (cb) cb();
           return 0;
         }
@@ -217,6 +265,7 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
     if (!activeAlert) return;
     const cb = activeAlert.onComplete;
     setActiveAlert(null);
+    setCaption(null); // Clear caption on dismissal
     if (cb) cb();
   }, [activeAlert]);
 
@@ -225,6 +274,7 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
     if (!activeAlert) return;
     const cb = activeAlert.onSkip || activeAlert.onComplete;
     setActiveAlert(null);
+    setCaption(null); // Clear caption on skip
     if (cb) cb();
   }, [activeAlert]);
 
@@ -277,10 +327,23 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
         dismissActiveAlert,
         skipActiveAlert,
         queueSpeak,
-        playChime
+        playChime,
+        caption
       }}
     >
       {children}
+
+      {/* Visual Caption Toast */}
+      {caption && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="visual-caption-toast"
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] max-w-xl w-[calc(100%-2rem)] bg-zinc-950/95 text-yellow-400 font-extrabold text-base md:text-lg px-6 py-4 rounded-xl border-2 border-yellow-400 shadow-2xl text-center select-none animate-in fade-in slide-in-from-bottom-5 duration-200 pointer-events-none"
+        >
+          <span>{caption}</span>
+        </div>
+      )}
 
       {/* Render Alert Takeover Modal Overlays */}
       {activeAlert && (

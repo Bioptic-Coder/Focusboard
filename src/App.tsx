@@ -295,7 +295,7 @@ function App() {
           
           <button
             onClick={() => setEditMode(!editMode)}
-            className={`p-3 rounded-xl border text-sm font-bold flex items-center transition-colors accessible-focus ${
+            className={`h-12 px-4 rounded-xl border text-sm font-bold flex items-center transition-colors accessible-focus ${
               editMode
                 ? "bg-amber-500 border-amber-500 text-black hover:bg-amber-600"
                 : "bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] border-[var(--color-card-border)] text-[var(--color-text-main)]"
@@ -309,7 +309,7 @@ function App() {
           <button
             ref={settingsButtonRef}
             onClick={() => setIsSettingsOpen(true)}
-            className="p-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] border border-[var(--color-card-border)] rounded-xl text-[var(--color-text-main)] transition-colors accessible-focus"
+            className="h-12 w-12 flex items-center justify-center bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] border border-[var(--color-card-border)] rounded-xl text-[var(--color-text-main)] transition-colors accessible-focus"
             title="Open Accessibility Settings"
             aria-label="Open Accessibility Settings"
           >

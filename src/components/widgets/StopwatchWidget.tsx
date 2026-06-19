@@ -3,26 +3,34 @@ import { Play, Pause, RotateCcw, Flag } from "lucide-react";
 
 interface StopwatchWidgetProps {
   announce?: (text: string) => void;
+  einkMode?: boolean;
 }
 
-export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce }) => {
+export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce, einkMode = false }) => {
   const [timeElapsed, setTimeElapsed] = useState(0); // in ms
   const [isRunning, setIsRunning] = useState(false);
   const [laps, setLaps] = useState<number[]>([]);
   
   const timerRef = useRef<any>(null);
+
   const startTimeRef = useRef<number>(0);
   const totalAccumulatedTime = useRef<number>(0);
 
-  // Wait! Let's restore the high frequency updates to keep the animation accurate!
-  // Yes: 10ms updates are expected for stopwatch centiseconds. Let's do that!
+  const getExactElapsed = () => {
+    if (isRunning) {
+      const delta = Date.now() - startTimeRef.current;
+      return totalAccumulatedTime.current + delta;
+    }
+    return totalAccumulatedTime.current;
+  };
+
   useEffect(() => {
     if (isRunning) {
       startTimeRef.current = Date.now();
       timerRef.current = setInterval(() => {
         const delta = Date.now() - startTimeRef.current;
         setTimeElapsed(totalAccumulatedTime.current + delta);
-      }, 10);
+      }, einkMode ? 1000 : 10);
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -33,7 +41,7 @@ export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce }) =>
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRunning]);
+  }, [isRunning, einkMode]);
 
   const handleStart = () => {
     setIsRunning(true);
@@ -42,29 +50,33 @@ export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce }) =>
 
   const handlePause = () => {
     setIsRunning(false);
-    totalAccumulatedTime.current = timeElapsed;
-    const formatted = formatTime(timeElapsed);
+    const exactElapsed = getExactElapsed();
+    totalAccumulatedTime.current = exactElapsed;
+    setTimeElapsed(exactElapsed);
+    const formatted = formatTime(exactElapsed);
     announce?.(`Stopwatch paused at ${formatted.minStr} minutes, ${formatted.secStr}.${formatted.msStr} seconds.`);
   };
 
   const handleReset = () => {
     setIsRunning(false);
+    totalAccumulatedTime.current = 0;
     setTimeElapsed(0);
     setLaps([]);
-    totalAccumulatedTime.current = 0;
     announce?.("Stopwatch reset to zero.");
   };
 
   const handleLap = () => {
-    setLaps((prev) => [timeElapsed, ...prev]);
-    const formatted = formatTime(timeElapsed);
+    const exactElapsed = getExactElapsed();
+    setLaps((prev) => [exactElapsed, ...prev]);
+    setTimeElapsed(exactElapsed);
+    const formatted = formatTime(exactElapsed);
     announce?.(`Lap ${laps.length + 1} recorded at ${formatted.minStr} minutes, ${formatted.secStr}.${formatted.msStr} seconds.`);
   };
 
   const formatTime = (timeMs: number) => {
     const min = Math.floor(timeMs / 60000);
     const sec = Math.floor((timeMs % 60000) / 1000);
-    const ms = Math.floor((timeMs % 1000) / 10); // 2 digits centiseconds
+    const ms = Math.floor((timeMs % 1000) / 10);
 
     const minStr = String(min).padStart(2, "0");
     const secStr = String(sec).padStart(2, "0");
@@ -91,10 +103,14 @@ export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce }) =>
             <span className="text-5xl sm:text-6xl tabular-nums">{minStr}</span>
             <span className="text-4xl sm:text-5xl px-1 text-[var(--color-text-muted)]">:</span>
             <span className="text-5xl sm:text-6xl tabular-nums">{secStr}</span>
-            <span className="text-3xl sm:text-4xl px-0.5 text-[var(--color-text-muted)]">.</span>
-            <span className="text-3xl sm:text-4xl tabular-nums text-[var(--color-text-muted)] w-[1.2em] text-left">
-              {msStr}
-            </span>
+            {!einkMode && (
+              <>
+                <span className="text-3xl sm:text-4xl px-0.5 text-[var(--color-text-muted)]">.</span>
+                <span className="text-3xl sm:text-4xl tabular-nums text-[var(--color-text-muted)] w-[1.2em] text-left">
+                  {msStr}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
@@ -136,7 +152,7 @@ export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce }) =>
             {timeElapsed > 0 && (
               <button
                 onClick={handleReset}
-                className="py-2.5 px-4 bg-zinc-700 hover:bg-zinc-650 text-white font-bold rounded-xl flex items-center text-sm border border-[var(--color-card-border)] transition-colors accessible-focus"
+                className="py-2.5 px-4 bg-zinc-750 hover:bg-zinc-700 text-white font-bold rounded-xl flex items-center text-sm border border-[var(--color-card-border)] transition-colors accessible-focus"
                 aria-label="Reset Stopwatch"
               >
                 <RotateCcw className="w-4 h-4 mr-1.5" /> Reset

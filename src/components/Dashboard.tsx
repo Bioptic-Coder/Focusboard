@@ -47,6 +47,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     startGridY: number;
     w: number;
     h: number;
+    currentX: number;
+    currentY: number;
   } | null>(null);
 
   // Pointer resizing state
@@ -58,6 +60,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     startGridH: number;
     x: number;
     y: number;
+    currentW: number;
+    currentH: number;
   } | null>(null);
 
   const handleDelete = (id: string) => {
@@ -122,6 +126,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
       startGridY: widget.y,
       w: widget.w,
       h: widget.h,
+      currentX: widget.x,
+      currentY: widget.y,
     };
     
     e.stopPropagation();
@@ -144,7 +150,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     const nextX = Math.max(0, Math.min(12 - info.w, info.startGridX + deltaCols));
     const nextY = Math.max(0, info.startGridY + deltaRows);
 
-    handleUpdateWidget(activeDragId, { x: nextX, y: nextY });
+    info.currentX = nextX;
+    info.currentY = nextY;
+
+    // Direct DOM manipulation of CSS custom properties on active wrapper element
+    const activeElement = gridRef.current.querySelector(`[data-widget-id="${activeDragId}"]`) as HTMLElement;
+    if (activeElement) {
+      activeElement.style.setProperty('--widget-x', String(nextX + 1));
+      activeElement.style.setProperty('--widget-y', String(nextY + 1));
+    }
   };
 
   const handleDragEnd = (e: React.PointerEvent, id: string) => {
@@ -154,9 +168,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     } catch (err) {
       // Safely ignore capture release issues
     }
-    const widget = widgets.find((w) => w.id === id);
-    if (widget) {
-      announce(`${widget.title || widget.type} widget layout position updated. Now at column ${widget.x + 1}, row ${widget.y + 1}.`);
+    const info = dragStartInfo.current;
+    if (info) {
+      handleUpdateWidget(id, { x: info.currentX, y: info.currentY });
+      const widget = widgets.find((w) => w.id === id);
+      if (widget) {
+        announce(`${widget.title || widget.type} widget layout position updated. Now at column ${info.currentX + 1}, row ${info.currentY + 1}.`);
+      }
     }
     setActiveDragId(null);
     dragStartInfo.current = null;
@@ -178,6 +196,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
       startGridH: widget.h,
       x: widget.x,
       y: widget.y,
+      currentW: widget.w,
+      currentH: widget.h,
     };
 
     e.stopPropagation();
@@ -200,7 +220,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     const nextW = Math.max(1, Math.min(12 - info.x, info.startGridW + deltaCols));
     const nextH = Math.max(1, info.startGridH + deltaRows);
 
-    handleUpdateWidget(activeResizeId, { w: nextW, h: nextH });
+    info.currentW = nextW;
+    info.currentH = nextH;
+
+    // Direct DOM manipulation of CSS custom properties on active wrapper element
+    const activeElement = gridRef.current.querySelector(`[data-widget-id="${activeResizeId}"]`) as HTMLElement;
+    if (activeElement) {
+      activeElement.style.setProperty('--widget-w', String(nextW));
+      activeElement.style.setProperty('--widget-h', String(nextH));
+    }
   };
 
   const handleResizeEnd = (e: React.PointerEvent, id: string) => {
@@ -210,9 +238,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
     } catch (err) {
       // Safely ignore
     }
-    const widget = widgets.find((w) => w.id === id);
-    if (widget) {
-      announce(`${widget.title || widget.type} widget dimensions updated. Width ${widget.w}, height ${widget.h}.`);
+    const info = resizeStartInfo.current;
+    if (info) {
+      handleUpdateWidget(id, { w: info.currentW, h: info.currentH });
+      const widget = widgets.find((w) => w.id === id);
+      if (widget) {
+        announce(`${widget.title || widget.type} widget dimensions updated. Width ${info.currentW}, height ${info.currentH}.`);
+      }
     }
     setActiveResizeId(null);
     resizeStartInfo.current = null;
@@ -228,7 +260,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
       case "timer":
         return <TimerWidget announce={announce} />;
       case "stopwatch":
-        return <StopwatchWidget announce={announce} />;
+        return <StopwatchWidget einkMode={einkMode} announce={announce} />;
       case "quicknotes":
         return <QuickNotesWidget />;
       case "quote":

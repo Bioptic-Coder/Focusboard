@@ -57,6 +57,52 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
     announce(`${widget.title || widget.type} ${changeDesc}. New dimensions: width ${w}, height ${h}.`);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!editMode) return;
+    if (e.target !== e.currentTarget) return;
+    switch (e.key) {
+      case "ArrowUp":
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleResize("shrink-h");
+        } else {
+          handleMove("up");
+        }
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleResize("grow-h");
+        } else {
+          handleMove("down");
+        }
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleResize("shrink-w");
+        } else {
+          handleMove("left");
+        }
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        if (e.shiftKey) {
+          handleResize("grow-w");
+        } else {
+          handleMove("right");
+        }
+        break;
+      case "Delete":
+      case "Backspace":
+        e.preventDefault();
+        onDelete(widget.id);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div
       style={gridStyle}
@@ -64,6 +110,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
         editMode ? "border-dashed border-amber-500/60 ring-2 ring-amber-500/10 cursor-default" : ""
       }`}
       tabIndex={editMode ? 0 : -1}
+      onKeyDown={handleKeyDown}
       aria-label={`${widget.title || widget.type} widget. Grid position column ${widget.x + 1}, row ${
         widget.y + 1
       }, width ${widget.w}, height ${widget.h}.`}
@@ -83,7 +130,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             {/* Delete button */}
             <button
               onClick={() => onDelete(widget.id)}
-              className="p-1.5 hover:bg-red-600/20 text-red-500 rounded-lg transition-colors accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-red-600/20 text-red-500 rounded-lg transition-colors accessible-focus"
               title="Delete widget"
               aria-label={`Delete ${widget.title || widget.type} widget`}
             >
@@ -107,7 +154,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
           <div
             onPointerDown={(e) => onDragStart(e, widget.id)}
             onPointerUp={(e) => onDragEnd(e, widget.id)}
-            className="absolute top-2 right-10 p-1.5 bg-[var(--color-control-bg)] hover:bg-amber-500 hover:text-black text-[var(--color-text-main)] rounded-lg cursor-grab active:cursor-grabbing transition-colors"
+            className="absolute top-2 right-16 w-11 h-11 flex items-center justify-center bg-[var(--color-control-bg)] hover:bg-amber-500 hover:text-black text-[var(--color-text-main)] rounded-lg cursor-grab active:cursor-grabbing transition-colors"
             title="Drag widget"
             aria-label="Drag widget handle"
             aria-hidden="true"
@@ -119,7 +166,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
           <div
             onPointerDown={(e) => onResizeStart(e, widget.id)}
             onPointerUp={(e) => onResizeEnd(e, widget.id)}
-            className="absolute bottom-2 right-2 p-1.5 bg-[var(--color-control-bg)] hover:bg-amber-500 hover:text-black text-[var(--color-text-main)] rounded-lg cursor-se-resize transition-colors"
+            className="absolute bottom-2 right-2 w-11 h-11 flex items-center justify-center bg-[var(--color-control-bg)] hover:bg-amber-500 hover:text-black text-[var(--color-text-main)] rounded-lg cursor-se-resize transition-colors"
             title="Resize widget"
             aria-label="Resize widget handle"
             aria-hidden="true"
@@ -128,11 +175,11 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
           </div>
 
           {/* Accessible Positioning Button Bar (shown on hover/focus) */}
-          <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 hidden group-focus-within:flex group-hover:flex bg-zinc-900 border-2 border-amber-500 p-2 rounded-xl shadow-xl items-center space-x-2 z-40 animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 hidden group-focus-within:flex group-hover:flex bg-zinc-900 border-2 border-amber-500 p-2 rounded-xl shadow-xl items-center space-x-2 z-40 animate-in fade-in zoom-in-95 duration-100">
             <span className="text-xs font-bold text-amber-500 px-1 uppercase">Move:</span>
             <button
               onClick={() => handleMove("up")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Move Up"
               aria-label={`Move ${widget.title || widget.type} Up`}
             >
@@ -140,7 +187,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             </button>
             <button
               onClick={() => handleMove("down")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Move Down"
               aria-label={`Move ${widget.title || widget.type} Down`}
             >
@@ -148,7 +195,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             </button>
             <button
               onClick={() => handleMove("left")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Move Left"
               aria-label={`Move ${widget.title || widget.type} Left`}
             >
@@ -156,7 +203,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             </button>
             <button
               onClick={() => handleMove("right")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Move Right"
               aria-label={`Move ${widget.title || widget.type} Right`}
             >
@@ -168,7 +215,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             <span className="text-xs font-bold text-amber-500 px-1 uppercase">Size:</span>
             <button
               onClick={() => handleResize("shrink-w")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Shrink Width"
               aria-label={`Shrink ${widget.title || widget.type} Width`}
             >
@@ -176,7 +223,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             </button>
             <button
               onClick={() => handleResize("grow-w")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Expand Width"
               aria-label={`Expand ${widget.title || widget.type} Width`}
             >
@@ -184,7 +231,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             </button>
             <button
               onClick={() => handleResize("shrink-h")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Shrink Height"
               aria-label={`Shrink ${widget.title || widget.type} Height`}
             >
@@ -192,7 +239,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
             </button>
             <button
               onClick={() => handleResize("grow-h")}
-              className="p-1.5 hover:bg-zinc-800 text-zinc-100 rounded accessible-focus"
+              className="w-11 h-11 flex items-center justify-center hover:bg-zinc-800 text-zinc-100 rounded-lg accessible-focus"
               title="Expand Height"
               aria-label={`Expand ${widget.title || widget.type} Height`}
             >
