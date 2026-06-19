@@ -10,9 +10,37 @@ export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
 
-  const [timeLeft, setTimeLeft] = useState(0); // in seconds
-  const [totalDuration, setTotalDuration] = useState(0); // in seconds
-  const [status, setStatus] = useState<"idle" | "running" | "paused" | "ringing">("idle");
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const saved = localStorage.getItem("deskdash-timer-timeleft");
+    if (saved) {
+      const parsedTimeLeft = parseInt(saved, 10);
+      const savedStatus = localStorage.getItem("deskdash-timer-status");
+      if (savedStatus === "running") {
+        const expiry = parseInt(localStorage.getItem("deskdash-timer-expiry") || "0", 10);
+        return Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
+      }
+      return parsedTimeLeft;
+    }
+    return 0;
+  });
+  
+  const [totalDuration, setTotalDuration] = useState(() => {
+    const saved = localStorage.getItem("deskdash-timer-duration");
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  
+  const [status, setStatus] = useState<"idle" | "running" | "paused" | "ringing">(() => {
+    const savedStatus = localStorage.getItem("deskdash-timer-status");
+    if (savedStatus === "running") {
+      const expiry = parseInt(localStorage.getItem("deskdash-timer-expiry") || "0", 10);
+      const diff = Math.ceil((expiry - Date.now()) / 1000);
+      if (diff <= 0) {
+        return "ringing";
+      }
+      return "running";
+    }
+    return (savedStatus as any) || "idle";
+  });
 
   const timerInterval = useRef<any>(null);
   const alarmInterval = useRef<any>(null);
@@ -25,6 +53,16 @@ export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
       stopAlarm();
     };
   }, []);
+
+  // Sync timer state to localStorage
+  useEffect(() => {
+    localStorage.setItem("deskdash-timer-status", status);
+    localStorage.setItem("deskdash-timer-timeleft", String(timeLeft));
+    localStorage.setItem("deskdash-timer-duration", String(totalDuration));
+    if (status === "running") {
+      localStorage.setItem("deskdash-timer-expiry", String(Date.now() + timeLeft * 1000));
+    }
+  }, [status, timeLeft, totalDuration]);
 
   // Update timer loop
   useEffect(() => {
@@ -65,6 +103,19 @@ export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
       playBeep();
     }, 1000);
   };
+
+  // Restore ringing status on mount if needed
+  useEffect(() => {
+    const savedStatus = localStorage.getItem("deskdash-timer-status");
+    if (savedStatus === "ringing") {
+      triggerAlarm();
+    } else if (savedStatus === "running") {
+      const expiry = parseInt(localStorage.getItem("deskdash-timer-expiry") || "0", 10);
+      if (expiry - Date.now() <= 0) {
+        triggerAlarm();
+      }
+    }
+  }, []);
 
   const playBeep = () => {
     try {
