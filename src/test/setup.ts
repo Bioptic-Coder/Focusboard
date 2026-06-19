@@ -65,5 +65,33 @@ class MockAudioContext {
 window.AudioContext = MockAudioContext as any;
 (window as any).webkitAudioContext = MockAudioContext;
 
-// Mock window.confirm
 window.confirm = () => true;
+
+import { vi, beforeEach } from "vitest";
+
+const mockQueueAlert = vi.fn();
+const mockQueueSpeak = vi.fn();
+const mockPlayChime = vi.fn();
+const mockDismissActiveAlert = vi.fn();
+
+beforeEach(() => {
+  mockQueueAlert.mockReset();
+  mockQueueSpeak.mockReset();
+  mockPlayChime.mockReset();
+  mockDismissActiveAlert.mockReset();
+});
+
+// Mock FocusCoordinatorContext globally for unit tests
+vi.mock("../context/FocusCoordinatorContext", () => {
+  return {
+    useFocusCoordinator: () => ({
+      queueAlert: mockQueueAlert,
+      activeAlert: null,
+      queueSpeak: mockQueueSpeak,
+      playChime: mockPlayChime,
+      dismissActiveAlert: mockDismissActiveAlert,
+    }),
+    FocusCoordinatorProvider: ({ children }: any) => children,
+  };
+});
+

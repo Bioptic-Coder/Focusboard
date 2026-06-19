@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { EyeStrainWidget } from "./EyeStrainWidget";
+import { useFocusCoordinator } from "../../context/FocusCoordinatorContext";
 
 describe("EyeStrainWidget", () => {
   it("renders with initial 20-minute countdown", () => {
@@ -57,15 +58,20 @@ describe("EyeStrainWidget", () => {
     // Trigger break
     fireEvent.click(testBtn);
     
-    // Check overlay
-    expect(screen.getByText("Look 20 feet away!")).toBeInTheDocument();
-    expect(screen.getByText("20")).toBeInTheDocument(); // 20 seconds break countdown
+    // Check overlay is active locally
+    expect(screen.getByText("BREAK ACTIVE")).toBeInTheDocument();
     
-    // Skip break should be visible in editMode
-    const skipBtn = screen.getByRole("button", { name: "Skip Break" });
-    expect(skipBtn).toBeInTheDocument();
+    // Retrieve queueAlert mock from FocusCoordinatorContext
+    const { queueAlert } = useFocusCoordinator();
+    expect(queueAlert).toHaveBeenCalled();
     
-    fireEvent.click(skipBtn);
-    expect(screen.queryByText("Look 20 feet away!")).not.toBeInTheDocument();
+    // Manually invoke onSkip to simulate user clicking Skip on the global alert dialog
+    const alertObj = queueAlert.mock.calls[0][0];
+    act(() => {
+      alertObj.onSkip();
+    });
+    
+    // The component should transition back to running and hide the overlay
+    expect(screen.queryByText("BREAK ACTIVE")).not.toBeInTheDocument();
   });
 });
