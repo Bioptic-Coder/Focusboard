@@ -109,6 +109,7 @@ function App() {
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const stretchSkipButtonRef = useRef<HTMLButtonElement>(null);
   const wasSettingsOpen = useRef(false);
+  const timeCueRef = useRef<HTMLDivElement>(null);
   
   // Initialize to current time on mount to prevent instant alerts
   const lastTriggeredMinRef = useRef<number>(new Date().getMinutes());
@@ -348,6 +349,13 @@ function App() {
     return () => window.removeEventListener("keydown", handleDismiss);
   }, [cueTime]);
 
+  // Focus time cue overlay container on mount
+  useEffect(() => {
+    if (cueTime) {
+      timeCueRef.current?.focus();
+    }
+  }, [cueTime]);
+
   // Keypress dismiss listener for stretch prompt (Escape key)
   useEffect(() => {
     if (!showStretchPrompt) return;
@@ -431,6 +439,8 @@ function App() {
     return false;
   };
 
+  const hasOverlay = isSettingsOpen || cueTime !== null || showStretchPrompt;
+
   return (
     <div className="w-full h-full flex flex-col overflow-hidden bg-[var(--color-dashboard-bg)] text-[var(--color-text-main)] transition-colors duration-200">
       
@@ -440,7 +450,10 @@ function App() {
       </div>
 
       {/* Top Header Bar */}
-      <header className="flex justify-between items-center px-6 py-4 border-b border-[var(--color-card-border)] bg-black/20 backdrop-blur-md z-30 shrink-0">
+      <header
+        inert={hasOverlay}
+        className="flex justify-between items-center px-6 py-4 border-b border-[var(--color-card-border)] bg-black/20 backdrop-blur-md z-30 shrink-0"
+      >
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/30">
             <LayoutGrid className="w-6 h-6 text-blue-400" />
@@ -489,23 +502,28 @@ function App() {
       </header>
 
       {/* Main Dashboard Workspace */}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+      <main
+        inert={hasOverlay}
+        className="flex-1 flex flex-col overflow-hidden relative"
+      >
         <Dashboard widgets={widgets} setWidgets={setWidgets} editMode={editMode} einkMode={settings.einkMode} announce={announce} />
       </main>
 
       {/* Settings Overlay side-drawer */}
-      <SettingsPanel
-        settings={settings}
-        onChange={setSettings}
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        editMode={editMode}
-        onToggleEditMode={() => setEditMode(!editMode)}
-        onResetLayout={handleResetLayout}
-        onImportLayout={handleImportLayout}
-        currentLayoutJson={JSON.stringify(widgets, null, 2)}
-        announce={announce}
-      />
+      <div inert={isSettingsOpen && (cueTime !== null || showStretchPrompt)}>
+        <SettingsPanel
+          settings={settings}
+          onChange={setSettings}
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          editMode={editMode}
+          onToggleEditMode={() => setEditMode(!editMode)}
+          onResetLayout={handleResetLayout}
+          onImportLayout={handleImportLayout}
+          currentLayoutJson={JSON.stringify(widgets, null, 2)}
+          announce={announce}
+        />
+      </div>
       
       {/* Background click overlay when settings is open */}
       {isSettingsOpen && (
@@ -519,10 +537,12 @@ function App() {
       {/* Fullscreen Time Cue Visual Flash Overlay */}
       {cueTime && (
         <div
+          ref={timeCueRef}
+          tabIndex={0}
           role="alert"
           aria-live="assertive"
           onClick={() => setCueTime(null)}
-          className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center text-center cursor-pointer animate-in fade-in duration-300"
+          className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center text-center cursor-pointer animate-in fade-in duration-300 accessible-focus"
         >
           <span className="text-xs uppercase font-extrabold tracking-widest text-zinc-500 mb-2">
             Time Announcement Cue

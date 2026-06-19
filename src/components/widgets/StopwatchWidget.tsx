@@ -14,26 +14,6 @@ export const StopwatchWidget: React.FC<StopwatchWidgetProps> = ({ announce }) =>
   const startTimeRef = useRef<number>(0);
   const totalAccumulatedTime = useRef<number>(0);
 
-  useEffect(() => {
-    if (isRunning) {
-      startTimeRef.current = Date.now();
-      timerRef.current = setInterval(() => {
-        const delta = Date.now() - startTimeRef.current;
-        setTimeElapsed(totalAccumulatedTime.current + delta);
-      }, 1000); // 1-second ticks are enough for standard screen read. If they need ms, they pause it.
-      // Wait, let's keep high frequency for visual, but standard focus display handles it.
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isRunning]);
-
   // Wait! Let's restore the high frequency updates to keep the animation accurate!
   // Yes: 10ms updates are expected for stopwatch centiseconds. Let's do that!
   useEffect(() => {

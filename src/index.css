@@ -59,6 +59,24 @@
   --card-shadow: none;
 }
 
+/* Enforce accessible colors for common Tailwind color classes on High Contrast Light */
+[data-theme="hc-light"] .text-blue-400,
+[data-theme="hc-light"] .text-blue-500 {
+  color: #0b4fbc !important;
+}
+[data-theme="hc-light"] .text-amber-500,
+[data-theme="hc-light"] .text-amber-600 {
+  color: #8c510a !important;
+}
+[data-theme="hc-light"] .text-red-500,
+[data-theme="hc-light"] .text-red-600 {
+  color: #b2182b !important;
+}
+[data-theme="hc-light"] .text-emerald-500,
+[data-theme="hc-light"] .text-emerald-600 {
+  color: #01665e !important;
+}
+
 html {
   font-size: var(--app-zoom);
   font-family: var(--font-sans);

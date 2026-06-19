@@ -238,20 +238,20 @@ export const WeatherWidget: React.FC = () => {
 
       {/* Control bar */}
       {!showConfig && (
-        <div className="flex space-x-1.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 mt-2">
+        <div className="flex space-x-1.5 transition-opacity duration-200 mt-2">
           <button
             onClick={() => fetchWeather(lat, lon)}
             disabled={loading}
-            className="py-1.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] disabled:opacity-40 text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] flex items-center accessible-focus"
+            className="py-2.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] disabled:opacity-40 text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] flex items-center accessible-focus"
             aria-label="Refresh weather data"
           >
-            <RefreshCw className={`w-3 h-3 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
           </button>
           
           <button
             onClick={requestGeolocation}
             disabled={loading}
-            className="py-1.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] flex items-center accessible-focus"
+            className="py-2.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] flex items-center accessible-focus"
             aria-label="Use current location coordinates"
           >
             {geoStatus === "denied" ? <MapPinOff className="w-3.5 h-3.5 mr-1 text-red-500" /> : <MapPin className="w-3.5 h-3.5 mr-1 text-green-500" />} Locate
@@ -259,7 +259,7 @@ export const WeatherWidget: React.FC = () => {
 
           <button
             onClick={() => setShowConfig(true)}
-            className="py-1.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] accessible-focus"
+            className="py-2.5 px-3 bg-[var(--color-control-bg)] hover:bg-[var(--color-control-hover)] text-xs font-bold rounded-lg border border-[var(--color-card-border)] text-[var(--color-text-main)] accessible-focus"
             aria-label="Set coordinates manually"
           >
             Edit Loc
