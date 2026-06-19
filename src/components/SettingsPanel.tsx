@@ -1,5 +1,6 @@
 import React from "react";
 import { X, Plus, Minus, RotateCcw, Copy, Check, Upload } from "lucide-react";
+import { useFocusCoordinator } from "../context/FocusCoordinatorContext";
 
 export interface AppSettings {
   theme: "glass" | "hc-dark" | "hc-light";
@@ -57,6 +58,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   currentLayoutJson,
   announce,
 }) => {
+  const { queueSpeak, playChime } = useFocusCoordinator();
   const [copied, setCopied] = React.useState(false);
   const [importText, setImportText] = React.useState("");
   const [importError, setImportError] = React.useState(false);
@@ -366,32 +368,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 updateSetting("timeCueAudio", nextVal);
                 announce(`Audio chime cues ${nextVal ? "enabled" : "disabled"}`);
                 if (nextVal) {
-                  // Play a quick test sound so they can hear it
-                  try {
-                    const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-                    const ctx = new AudioCtxClass();
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.type = "sine";
-                    osc.frequency.setValueAtTime(880, ctx.currentTime);
-                    gain.gain.setValueAtTime(0.01, ctx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
-                    gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-                    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.2);
-                    gain.gain.setValueAtTime(0.3, ctx.currentTime + 0.2);
-                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
-                    osc.start();
-                    osc.stop(ctx.currentTime + 0.5);
-                    setTimeout(() => {
-                      try {
-                        ctx.close();
-                      } catch (_) {}
-                    }, 600);
-                  } catch (e) {
-                    console.warn("AudioContext blocked or not supported:", e);
-                  }
+                  playChime("cue");
                 }
               }}
               className={`py-3 px-4 rounded-xl text-left font-bold text-sm border transition-all accessible-focus flex justify-between items-center ${
@@ -413,25 +390,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 updateSetting("timeCueVoice", nextVal);
                 announce(`Voice announcement cues ${nextVal ? "enabled" : "disabled"}`);
                 if (nextVal) {
-                  // Speak a short test phrase
-                  try {
-                    if (typeof window !== "undefined" && window.speechSynthesis) {
-                      window.speechSynthesis.cancel();
-                      const text = "Voice announcements enabled";
-                      const utterance = new SpeechSynthesisUtterance(text);
-                      if (window.speechSynthesis.getVoices) {
-                        const voices = window.speechSynthesis.getVoices();
-                        const voice = voices.find(v => 
-                          (v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Siri") || v.name.includes("Premium")) && 
-                          v.lang.startsWith("en")
-                        ) || voices.find(v => v.lang.startsWith("en"));
-                        if (voice) utterance.voice = voice;
-                      }
-                      window.speechSynthesis.speak(utterance);
-                    }
-                  } catch (e) {
-                    console.warn("TTS test failed:", e);
-                  }
+                  queueSpeak("Voice announcements enabled");
                 }
               }}
               className={`py-3 px-4 rounded-xl text-left font-bold text-sm border transition-all accessible-focus flex justify-between items-center ${

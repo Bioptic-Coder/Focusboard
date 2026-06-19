@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { useAudioService, playTransitionChime as playTransitionChimeSound } from "../../services/audioService";
 
 interface BreathStep {
   name: "inhale" | "holdIn" | "exhale" | "holdOut";
@@ -35,6 +36,7 @@ interface BreathingWidgetProps {
 }
 
 export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode, announce }) => {
+  const { getAudioContext } = useAudioService();
   const [patternType, setPatternType] = useState<PatternType>("box");
   const [isActive, setIsActive] = useState<boolean>(false);
   const [stepIndex, setStepIndex] = useState<number>(0);
@@ -105,38 +107,8 @@ export const BreathingWidget: React.FC<BreathingWidgetProps> = ({ einkMode, anno
   const playTransitionChime = () => {
     if (isMuted) return;
     try {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtxClass();
-
-      const osc1 = ctx.createOscillator();
-      const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc1.type = "sine";
-      osc2.type = "sine";
-
-      // Pleasant double-tone chord
-      osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-      osc2.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
-
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-
-      osc1.start();
-      osc2.start();
-      osc1.stop(ctx.currentTime + 0.35);
-      osc2.stop(ctx.currentTime + 0.35);
-
-      setTimeout(() => {
-        try {
-          ctx.close();
-        } catch (_) {}
-      }, 400);
+      const ctx = getAudioContext();
+      playTransitionChimeSound(ctx);
     } catch (e) {
       console.warn("AudioContext blocked or not supported:", e);
     }

@@ -1,6 +1,18 @@
 const CACHE_NAME = "deskdash-cache-v1";
 const ASSETS_TO_CACHE = [
   "./",
+  "./assets/index-DPoMQtkL.css",
+  "./assets/index-mNmBQoE4.js",
+  "./favicon.svg",
+  "./fonts/atkinson-hyperlegible-latin-400-italic.woff",
+  "./fonts/atkinson-hyperlegible-latin-400-italic.woff2",
+  "./fonts/atkinson-hyperlegible-latin-400-normal.woff",
+  "./fonts/atkinson-hyperlegible-latin-400-normal.woff2",
+  "./fonts/atkinson-hyperlegible-latin-700-italic.woff",
+  "./fonts/atkinson-hyperlegible-latin-700-italic.woff2",
+  "./fonts/atkinson-hyperlegible-latin-700-normal.woff",
+  "./fonts/atkinson-hyperlegible-latin-700-normal.woff2",
+  "./icons.svg",
   "./index.html",
   "./manifest.json"
 ];

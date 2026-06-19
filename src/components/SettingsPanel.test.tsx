@@ -1,6 +1,15 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { SettingsPanel, type AppSettings } from "./SettingsPanel";
+import { FocusCoordinatorProvider } from "../context/FocusCoordinatorContext";
+
+const renderWithProvider = (ui: React.ReactElement) => {
+  return render(
+    <FocusCoordinatorProvider>
+      {ui}
+    </FocusCoordinatorProvider>
+  );
+};
 
 const mockSettings: AppSettings = {
   theme: "glass",
@@ -20,7 +29,7 @@ const mockSettings: AppSettings = {
 describe("SettingsPanel Integration", () => {
   it("renders settings sections when open", () => {
     const mockOnClose = vi.fn();
-    render(
+    renderWithProvider(
       <SettingsPanel
         settings={mockSettings}
         onChange={vi.fn()}
@@ -43,7 +52,7 @@ describe("SettingsPanel Integration", () => {
 
   it("triggers onChange with updated theme when a contrast button is clicked", () => {
     const mockOnChange = vi.fn();
-    render(
+    renderWithProvider(
       <SettingsPanel
         settings={mockSettings}
         onChange={mockOnChange}
@@ -69,7 +78,7 @@ describe("SettingsPanel Integration", () => {
 
   it("triggers onChange with updated zoom when increase/decrease buttons are clicked", () => {
     const mockOnChange = vi.fn();
-    render(
+    renderWithProvider(
       <SettingsPanel
         settings={mockSettings}
         onChange={mockOnChange}
@@ -95,7 +104,7 @@ describe("SettingsPanel Integration", () => {
 
   it("triggers onChange with updated einkMode when the eink button is clicked", () => {
     const mockOnChange = vi.fn();
-    render(
+    renderWithProvider(
       <SettingsPanel
         settings={mockSettings}
         onChange={mockOnChange}
@@ -121,7 +130,7 @@ describe("SettingsPanel Integration", () => {
 
   it("triggers onChange with updated blueLightFilter when clicked", () => {
     const mockOnChange = vi.fn();
-    render(
+    renderWithProvider(
       <SettingsPanel
         settings={mockSettings}
         onChange={mockOnChange}
@@ -147,7 +156,7 @@ describe("SettingsPanel Integration", () => {
 
   it("triggers onChange with updated timeCueVoice when clicked", () => {
     const mockOnChange = vi.fn();
-    render(
+    renderWithProvider(
       <SettingsPanel
         settings={mockSettings}
         onChange={mockOnChange}

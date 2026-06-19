@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, RotateCcw, Volume2, VolumeX, Eye } from "lucide-react";
+import { useFocusCoordinator } from "../../context/FocusCoordinatorContext";
 
 interface EyeStrainWidgetProps {
   editMode: boolean;
@@ -7,13 +8,13 @@ interface EyeStrainWidgetProps {
 }
 
 export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode, announce }) => {
+  const { queueAlert, playChime, queueSpeak, isFallback } = useFocusCoordinator();
   const [timeLeft, setTimeLeft] = useState<number>(20 * 60); // 20 minutes in seconds
   const [breakTimeLeft, setBreakTimeLeft] = useState<number>(20); // 20 seconds eye break
   const [status, setStatus] = useState<"running" | "paused" | "break">("running");
   const [isMuted, setIsMuted] = useState<boolean>(false);
 
   const mainTimerRef = useRef<any>(null);
-  const breakTimerRef = useRef<any>(null);
 
   useEffect(() => {
     if (status === "running") {
@@ -39,40 +40,51 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode, anno
   }, [status]);
 
   useEffect(() => {
-    if (status === "break") {
-      breakTimerRef.current = setInterval(() => {
+    if (status === "break" && isFallback) {
+      const interval = setInterval(() => {
         setBreakTimeLeft((prev) => {
           if (prev <= 1) {
-            finishBreak();
+            setStatus("running");
+            setTimeLeft(20 * 60);
             return 20;
           }
           return prev - 1;
         });
       }, 1000);
-    } else {
-      if (breakTimerRef.current) {
-        clearInterval(breakTimerRef.current);
-        breakTimerRef.current = null;
-      }
+      return () => clearInterval(interval);
     }
-
-    return () => {
-      if (breakTimerRef.current) clearInterval(breakTimerRef.current);
-    };
-  }, [status]);
+  }, [status, isFallback]);
 
   const triggerBreak = () => {
     setStatus("break");
-    setBreakTimeLeft(20);
-    playAlarmSound(true); // Play start-break chime
+    if (isFallback) {
+      setBreakTimeLeft(20);
+      announce?.("Rest break started. Look 20 feet away for 20 seconds.");
+      return;
+    }
+    queueAlert({
+      type: "eyeStrain",
+      duration: 20,
+      speakText: "Rest break started. Look 20 feet away for 20 seconds.",
+      chimeType: isMuted ? undefined : "eyeStrainStart",
+      showSkip: true,
+      onComplete: () => {
+        setStatus("running");
+        setTimeLeft(20 * 60);
+        if (!isMuted) {
+          playChime("eyeStrainEnd");
+        }
+        queueSpeak("Rest break finished. Work timer restarted.");
+        announce?.("Rest break finished. Work timer restarted.");
+      },
+      onSkip: () => {
+        setStatus("running");
+        setTimeLeft(20 * 60);
+        queueSpeak("Rest break skipped.");
+        announce?.("Rest break skipped.");
+      }
+    });
     announce?.("Rest break started. Look 20 feet away for 20 seconds.");
-  };
-
-  const finishBreak = () => {
-    setStatus("running");
-    setTimeLeft(20 * 60); // Reset main timer to 20 mins
-    playAlarmSound(false); // Play end-break chime
-    announce?.("Rest break finished. Work timer restarted.");
   };
 
   const handlePause = () => {
@@ -92,54 +104,6 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode, anno
     announce?.("Eye break timer reset.");
   };
 
-  const playAlarmSound = (isStart: boolean) => {
-    if (isMuted) return;
-    try {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtxClass();
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.type = "sine";
-
-      if (isStart) {
-        // Double warning beep
-        osc.frequency.setValueAtTime(660, ctx.currentTime); // E5
-        gain.gain.setValueAtTime(0.01, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.05);
-        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.2);
-        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.4);
-      } else {
-        // Triumphant rising triple chime
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime + 0.1); // D5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2); // E5
-        
-        gain.gain.setValueAtTime(0.01, ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime + 0.25);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.5);
-      }
-
-      setTimeout(() => {
-        try {
-          ctx.close();
-        } catch (_) {}
-      }, 600);
-    } catch (e) {
-      console.warn("AudioContext blocked or not supported:", e);
-    }
-  };
-
   // Convert seconds to MM:SS format
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
@@ -149,28 +113,38 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode, anno
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-between p-1 select-none text-[var(--color-text-main)] relative">
-      {/* 20-Second Active Break Overlay */}
+      {/* 20-Second Active Break Overlay Placeholder or Full local overlay in fallback */}
       {status === "break" && (
-        <div role="alert" className="absolute inset-0 bg-black/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-4 z-20 border-2 border-emerald-500 animate-in fade-in duration-200">
-          <Eye className="w-12 h-12 text-emerald-400 mb-2 animate-bounce" aria-hidden="true" />
-          <h4 className="text-xl font-black text-white text-center leading-tight uppercase tracking-wide">
-            Look 20 feet away!
-          </h4>
-          <p className="text-xs font-bold text-zinc-400 text-center max-w-[200px] mt-1 leading-snug">
-            Rest your eyes on a distant object for 20 seconds.
-          </p>
-          <div className="text-5xl font-black text-emerald-400 font-mono tracking-tight tabular-nums mt-4 p-2 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl">
-            {breakTimeLeft}
+        isFallback ? (
+          <div role="alert" className="absolute inset-0 bg-black/95 backdrop-blur-md rounded-2xl flex flex-col items-center justify-center p-4 z-20 border-2 border-emerald-500 animate-in fade-in duration-200">
+            <Eye className="w-12 h-12 text-emerald-400 mb-2 animate-bounce" aria-hidden="true" />
+            <h4 className="text-xl font-black text-white text-center leading-tight uppercase tracking-wide">
+              Look 20 feet away!
+            </h4>
+            <p className="text-xs font-bold text-zinc-400 text-center max-w-[200px] mt-1 leading-snug">
+              Rest your eyes on a distant object for 20 seconds.
+            </p>
+            <div className="text-5xl font-black text-emerald-400 font-mono tracking-tight tabular-nums mt-4 p-2 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl">
+              {breakTimeLeft}
+            </div>
+            {editMode && (
+              <button
+                onClick={() => {
+                  setStatus("running");
+                  setTimeLeft(20 * 60);
+                }}
+                className="mt-4 py-1.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-lg transition-colors accessible-focus"
+              >
+                Skip Break
+              </button>
+            )}
           </div>
-          {editMode && (
-            <button
-              onClick={finishBreak}
-              className="mt-4 py-1.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-lg transition-colors accessible-focus"
-            >
-              Skip Break
-            </button>
-          )}
-        </div>
+        ) : (
+          <div className="absolute inset-0 bg-emerald-950/20 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center p-4 z-20 border border-emerald-500/50">
+            <Eye className="w-8 h-8 text-emerald-400 mb-1 animate-pulse" aria-hidden="true" />
+            <span className="text-xs font-extrabold text-emerald-400">BREAK ACTIVE</span>
+          </div>
+        )
       )}
 
       {/* Main Countdown Display */}

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, RotateCcw, VolumeX, AlertTriangle } from "lucide-react";
+import { useFocusCoordinator } from "../../context/FocusCoordinatorContext";
 
 interface TimerWidgetProps {
   announce?: (text: string) => void;
 }
 
 export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
+  const { queueAlert, dismissActiveAlert } = useFocusCoordinator();
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
@@ -43,8 +45,6 @@ export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
   });
 
   const timerInterval = useRef<any>(null);
-  const alarmInterval = useRef<any>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
 
   // Clean up timers on unmount
   useEffect(() => {
@@ -97,11 +97,16 @@ export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
     }
     announce?.("Timer finished! Alarm is ringing.");
 
-    // Play synthesized beep alarm loop
-    playBeep();
-    alarmInterval.current = setInterval(() => {
-      playBeep();
-    }, 1000);
+    queueAlert({
+      type: "timer",
+      speakText: "Timer finished! Alarm is ringing.",
+      chimeType: "timerAlarm",
+      onComplete: () => {
+        setStatus("idle");
+        setTimeLeft(0);
+        setTotalDuration(0);
+      }
+    });
   };
 
   // Restore ringing status on mount if needed
@@ -116,44 +121,6 @@ export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
       }
     }
   }, []);
-
-  const playBeep = () => {
-    try {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtxClass();
-      audioCtxRef.current = ctx;
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, ctx.currentTime); // 880Hz (A5 pitch)
-      
-      // Fast alarm double-beep pattern
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.05);
-      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-      
-      gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.2);
-      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.4);
-
-      // Close context after play to prevent leakage
-      setTimeout(() => {
-        try {
-          ctx.close();
-        } catch (_) {}
-      }, 500);
-
-    } catch (e) {
-      console.warn("Web Audio API not supported or interaction blocked:", e);
-    }
-  };
 
   const startTimer = () => {
     const totalSecs = hours * 3600 + minutes * 60 + seconds;
@@ -183,21 +150,10 @@ export const TimerWidget: React.FC<TimerWidgetProps> = ({ announce }) => {
   };
 
   const stopAlarm = () => {
-    if (alarmInterval.current) {
-      clearInterval(alarmInterval.current);
-      alarmInterval.current = null;
-    }
     setStatus("idle");
     setTimeLeft(0);
     setTotalDuration(0);
-
-    // Try to safely close audio ctx
-    if (audioCtxRef.current) {
-      try {
-        audioCtxRef.current.close();
-      } catch (_) {}
-      audioCtxRef.current = null;
-    }
+    dismissActiveAlert();
   };
 
   const loadPreset = (presetMinutes: number) => {

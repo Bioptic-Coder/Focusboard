@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, RotateCcw, SkipForward, Flame, Coffee, Trophy } from "lucide-react";
+import { useAudioService, playPomodoroChime } from "../../services/audioService";
 
 type PomodoroMode = "work" | "break" | "longBreak";
 
@@ -33,6 +34,7 @@ interface PomodoroWidgetProps {
 }
 
 export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode, announce }) => {
+  const { getAudioContext } = useAudioService();
   const [mode, setMode] = useState<PomodoroMode>("work");
   const [timeLeft, setTimeLeft] = useState(MODE_CONFIGS.work.duration);
   const [isRunning, setIsRunning] = useState(false);
@@ -94,35 +96,8 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode, announ
 
   const playChime = () => {
     try {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtxClass();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      // Two-tone focus chime pattern
-      osc.type = "sine";
-      
-      // Tone 1: 523.25Hz (C5)
-      osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.1);
-      
-      // Tone 2: 659.25Hz (E5)
-      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.25);
-      gain.gain.setValueAtTime(0.5, ctx.currentTime + 0.25);
-      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.55);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.6);
-
-      setTimeout(() => {
-        try {
-          ctx.close();
-        } catch (_) {}
-      }, 800);
+      const ctx = getAudioContext();
+      playPomodoroChime(ctx);
     } catch (e) {
       console.warn("Chime blocked by browser audio policy:", e);
     }

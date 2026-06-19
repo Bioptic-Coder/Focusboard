@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach } from "vitest";
 import App from "./App";
+import { FocusCoordinatorProvider } from "./context/FocusCoordinatorContext";
 
 describe("App Coordinator Integration", () => {
   beforeEach(() => {
@@ -8,7 +9,11 @@ describe("App Coordinator Integration", () => {
   });
 
   it("mounts and renders the default widgets layout", () => {
-    render(<App />);
+    render(
+      <FocusCoordinatorProvider>
+        <App />
+      </FocusCoordinatorProvider>
+    );
 
     // Header title
     expect(screen.getByText("Focusboard")).toBeInTheDocument();
@@ -22,7 +27,11 @@ describe("App Coordinator Integration", () => {
   });
 
   it("opens the settings panel when the settings cog is clicked", () => {
-    render(<App />);
+    render(
+      <FocusCoordinatorProvider>
+        <App />
+      </FocusCoordinatorProvider>
+    );
 
     const settingsBtn = screen.getByRole("button", { name: "Open Accessibility Settings" });
     fireEvent.click(settingsBtn);
@@ -32,7 +41,11 @@ describe("App Coordinator Integration", () => {
   });
 
   it("toggles edit mode when clicking the edit button", () => {
-    render(<App />);
+    render(
+      <FocusCoordinatorProvider>
+        <App />
+      </FocusCoordinatorProvider>
+    );
 
     // Should not show Edit Mode bar initially
     expect(screen.queryByText(/Edit Mode: Add Widgets/i)).not.toBeInTheDocument();

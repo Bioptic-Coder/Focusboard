@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause, Plus, Minus } from "lucide-react";
+import { useAudioService, playMetronomeTick } from "../../services/audioService";
 
 interface MetronomeWidgetProps {
   einkMode?: boolean;
@@ -7,6 +8,7 @@ interface MetronomeWidgetProps {
 }
 
 export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode, announce }) => {
+  const { getAudioContext } = useAudioService();
   const [bpm, setBpm] = useState<number>(120);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentBeat, setCurrentBeat] = useState<number>(1);
@@ -54,31 +56,8 @@ export const MetronomeWidget: React.FC<MetronomeWidgetProps> = ({ einkMode, anno
 
   const playTick = (isFirstBeat: boolean) => {
     try {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
-      const ctx = new AudioCtxClass();
-      
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.type = "triangle"; // softer click than a sine or square
-      const freq = isFirstBeat ? 1000 : 600; // higher pitch for beat 1
-      osc.frequency.setValueAtTime(freq, ctx.currentTime);
-
-      gain.gain.setValueAtTime(0.01, ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.6, ctx.currentTime + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.06);
-
-      setTimeout(() => {
-        try {
-          ctx.close();
-        } catch (_) {}
-      }, 100);
+      const ctx = getAudioContext();
+      playMetronomeTick(ctx, isFirstBeat);
     } catch (e) {
       console.warn("AudioContext blocked or not supported:", e);
     }

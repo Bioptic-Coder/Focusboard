@@ -66,7 +66,7 @@ describe("EyeStrainWidget", () => {
     expect(queueAlert).toHaveBeenCalled();
     
     // Manually invoke onSkip to simulate user clicking Skip on the global alert dialog
-    const alertObj = queueAlert.mock.calls[0][0];
+    const alertObj = (queueAlert as any).mock.calls[0][0];
     act(() => {
       alertObj.onSkip();
     });

@@ -90,6 +90,7 @@ vi.mock("../context/FocusCoordinatorContext", () => {
       queueSpeak: mockQueueSpeak,
       playChime: mockPlayChime,
       dismissActiveAlert: mockDismissActiveAlert,
+      isFallback: false,
     }),
     FocusCoordinatorProvider: ({ children }: any) => children,
   };
