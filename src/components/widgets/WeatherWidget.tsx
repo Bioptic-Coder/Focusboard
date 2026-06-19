@@ -34,7 +34,17 @@ export const WeatherWidget: React.FC = () => {
     return saved ? parseFloat(saved) : DEFAULT_LON;
   });
 
-  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(() => {
+    const saved = localStorage.getItem("weather-cache-data");
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch (_) {
+      return null;
+    }
+  });
+  const [cacheTime, setCacheTime] = useState<string | null>(() => {
+    return localStorage.getItem("weather-cache-time");
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [geoStatus, setGeoStatus] = useState<"prompt" | "granted" | "denied" | "error">("prompt");
@@ -55,17 +65,28 @@ export const WeatherWidget: React.FC = () => {
       const data = await response.json();
       
       if (data.current_weather) {
-        setWeather({
+        const weatherData = {
           temp: Math.round(data.current_weather.temperature),
           windSpeed: Math.round(data.current_weather.windspeed),
           weatherCode: data.current_weather.weathercode,
           time: data.current_weather.time,
-        });
+        };
+        setWeather(weatherData);
+        const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setCacheTime(nowStr);
+        localStorage.setItem("weather-cache-data", JSON.stringify(weatherData));
+        localStorage.setItem("weather-cache-time", nowStr);
       } else {
         throw new Error("No current weather data found.");
       }
     } catch (err: any) {
       setError(err.message || "Failed to load weather.");
+      const saved = localStorage.getItem("weather-cache-data");
+      if (saved) {
+        try {
+          setWeather(JSON.parse(saved));
+        } catch (_) {}
+      }
     } finally {
       setLoading(false);
     }
@@ -227,6 +248,12 @@ export const WeatherWidget: React.FC = () => {
                   📍 {lat.toFixed(2)}°, {lon.toFixed(2)}°
                 </span>
               </div>
+
+              {cacheTime && error && (
+                <div className="text-[10px] text-[var(--color-text-muted)] font-bold mt-2 uppercase tracking-widest">
+                  Offline — Cached {cacheTime}
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-sm font-bold text-[var(--color-text-muted)]">
