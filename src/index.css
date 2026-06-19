@@ -162,3 +162,35 @@ a:focus-visible,
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+
+/* Responsive Grid Dashboard Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  grid-auto-rows: 140px;
+}
+
+.widget-grid-item {
+  grid-column: var(--widget-x) / span var(--widget-w);
+  grid-row: var(--widget-y) / span var(--widget-h);
+  min-height: calc(var(--widget-h) * 140px - 16px);
+}
+
+/* Mobile Portrait / Small Screens Vertical Stacking Override */
+@media (max-width: 767px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    grid-auto-rows: auto !important;
+  }
+  
+  .widget-grid-item {
+    grid-column: span 1 / span 1 !important;
+    grid-row: auto !important;
+    min-height: auto !important;
+  }
+  
+  .edit-helper-grid {
+    display: none !important;
+  }
+}

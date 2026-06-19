@@ -30,9 +30,10 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
   // Grid coordinates map to tailwind style or inline style.
   // Tailwind v4 uses standard CSS variables or inline styles for dynamic grid coordinates.
   const gridStyle: React.CSSProperties = {
-    gridColumn: `${widget.x + 1} / span ${widget.w}`,
-    gridRow: `${widget.y + 1} / span ${widget.h}`,
-    minHeight: `${widget.h * 140 - 16}px`, // slightly less than grid track height
+    ['--widget-x' as any]: widget.x + 1,
+    ['--widget-w' as any]: widget.w,
+    ['--widget-y' as any]: widget.y + 1,
+    ['--widget-h' as any]: widget.h,
   };
 
   const handleMove = (direction: "up" | "down" | "left" | "right") => {
@@ -59,7 +60,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
   return (
     <div
       style={gridStyle}
-      className={`glass-card flex flex-col relative transition-shadow duration-150 accessible-focus group ${
+      className={`glass-card widget-grid-item flex flex-col relative transition-shadow duration-150 accessible-focus group ${
         editMode ? "border-dashed border-amber-500/60 ring-2 ring-amber-500/10 cursor-default" : ""
       }`}
       tabIndex={editMode ? 0 : -1}

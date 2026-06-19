@@ -360,15 +360,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ widgets, setWidgets, editM
       >
         <div
           ref={gridRef}
-          className="grid grid-cols-12 gap-4 relative select-none w-full"
+          className="dashboard-grid relative select-none w-full"
           style={{
-            gridAutoRows: "140px",
             minHeight: "100%",
           }}
         >
           {/* Edit Mode Helper Grid Background */}
           {editMode && (
-            <div className="absolute inset-0 grid grid-cols-12 gap-4 pointer-events-none z-0">
+            <div className="absolute inset-0 grid grid-cols-12 gap-4 pointer-events-none z-0 edit-helper-grid">
               {Array.from({ length: 12 * gridRows }).map((_, i) => (
                 <div
                   key={i}
