@@ -156,6 +156,7 @@ export const FocusCoordinatorProvider: React.FC<FocusCoordinatorProviderProps> =
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     speechQueueRef.current.push(text);
     processSpeechQueue();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateCaption]);
 
   // Play chimes using the shared AudioContext

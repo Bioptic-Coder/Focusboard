@@ -2,7 +2,7 @@ const CACHE_NAME = "deskdash-cache-v1";
 const ASSETS_TO_CACHE = [
   "./",
   "./assets/index-BHlajhcX.css",
-  "./assets/index-DJFWOGMr.js",
+  "./assets/index-Bso9PZOp.js",
   "./favicon.svg",
   "./fonts/atkinson-hyperlegible-latin-400-italic.woff",
   "./fonts/atkinson-hyperlegible-latin-400-italic.woff2",

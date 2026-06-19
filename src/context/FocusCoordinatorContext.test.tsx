@@ -7,7 +7,7 @@ import {
   CHIME_DESCRIPTIONS
 } from "./FocusCoordinatorContext";
 
-// Unmock context for this unit test file
+// Unmock context for this unit test file by returning the original implementation
 vi.mock("./FocusCoordinatorContext", async (importOriginal) => {
   return await importOriginal<typeof import("./FocusCoordinatorContext")>();
 });
@@ -85,7 +85,7 @@ describe("FocusCoordinator Caption System", () => {
       screen.getByTestId("btn-play-cue").click();
     });
 
-    const expectedDescription = CHIME_DESCRIPTIONS["cue"];
+    const expectedDescription = "[Chime: hourly time cue]";
     expect(screen.getByTestId("caption-val")).toHaveTextContent(expectedDescription);
     expect(screen.getByTestId("visual-caption-toast")).toHaveTextContent(expectedDescription);
   });
@@ -105,7 +105,7 @@ describe("FocusCoordinator Caption System", () => {
       screen.getByTestId("btn-speak").click();
     });
 
-    const expectedDescription = CHIME_DESCRIPTIONS["cue"];
+    const expectedDescription = "[Chime: hourly time cue]";
     expect(screen.getByTestId("caption-val")).toHaveTextContent(
       `${expectedDescription} Test speech announcement`
     );
