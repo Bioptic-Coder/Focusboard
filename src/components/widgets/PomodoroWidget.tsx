@@ -73,6 +73,8 @@ export const PomodoroWidget: React.FC<PomodoroWidgetProps> = ({ editMode, announ
     if (mode === "work") {
       const nextCount = completedCount + 1;
       setCompletedCount(nextCount);
+      // Notify Garden widget of completed focus session
+      document.dispatchEvent(new CustomEvent("focusboard:pomodoro-complete"));
       
       // Every 4th work cycle, trigger a long break
       if (nextCount % 4 === 0) {

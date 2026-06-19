@@ -71,6 +71,8 @@ export const EyeStrainWidget: React.FC<EyeStrainWidgetProps> = ({ editMode, anno
       onComplete: () => {
         setStatus("running");
         setTimeLeft(20 * 60);
+        // Notify Garden widget of completed eye break
+        document.dispatchEvent(new CustomEvent("focusboard:eyestrain-complete"));
         if (!isMuted) {
           playChime("eyeStrainEnd");
         }

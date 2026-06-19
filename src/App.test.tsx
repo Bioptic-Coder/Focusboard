@@ -48,13 +48,13 @@ describe("App Coordinator Integration", () => {
     );
 
     // Should not show Edit Mode bar initially
-    expect(screen.queryByText(/Edit Mode: Add Widgets/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Edit Mode$/)).not.toBeInTheDocument();
 
     const editBtn = screen.getByRole("button", { name: /Toggle Dashboard Edit Mode/i });
     fireEvent.click(editBtn);
 
-    // Edit bar should now be visible and display widget addition tools
-    expect(screen.getByText(/Edit Mode: Add Widgets/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /\+ Clock/i })).toBeInTheDocument();
+    // Edit bar should now be visible with the Add Widget button
+    expect(screen.getByText(/Edit Mode$/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Add Widget/i })).toBeInTheDocument();
   });
 });

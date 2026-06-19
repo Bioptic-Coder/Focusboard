@@ -241,7 +241,7 @@ function App() {
         const isValid = parsed.every(
           (w: any) =>
             typeof w.id === "string" &&
-            ["clock", "date", "timer", "stopwatch", "quicknotes", "quote", "weather", "calculator", "pomodoro", "metronome", "worldclock", "breathing", "eyestrain"].includes(w.type) &&
+            ["clock", "date", "timer", "stopwatch", "quicknotes", "quote", "weather", "calculator", "pomodoro", "metronome", "worldclock", "breathing", "eyestrain", "braindump", "visualtimer", "garden"].includes(w.type) &&
             typeof w.x === "number" &&
             typeof w.y === "number" &&
             typeof w.w === "number" &&
